@@ -70,9 +70,7 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function sqlFindById() As String
-
             Return String.Format("SELECT * FROM {0} WHERE {1}=@{1};", tabella, propId.Name)
-
         End Function
 
         Public Function sqlAdd() As String
@@ -121,12 +119,12 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function sqlGetPage(pagina As Integer, righePerPagina As Integer, WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String
-            Return String.Format("{0} OFFSET {1} ROWS FETCH NEXT {2} ROWS ONLY;", sqlGetFilter(WhereExpression, sortExpression).TrimEnd(";"), pagina - 1, righePerPagina)
+            Return String.Format("{0} OFFSET {1} ROWS FETCH NEXT {2} ROWS ONLY;", sqlGetFilter(WhereExpression, sortExpression).TrimEnd(";"), (pagina - 1) * righePerPagina, righePerPagina)
         End Function
 
         Private Function sortClause(sortExpression As List(Of SortInfo)) As String
             Dim se As String = String.Empty
-            If sortExpression IsNot Nothing Then
+            If sortExpression IsNot Nothing AndAlso sortExpression.Count > 0 Then
                 For Each si As SortInfo In sortExpression
                     If se.Length > 0 Then se += ","
                     se += String.Format("{0}{1}", si.campo, If(si.crescente, "", " DESC"))
@@ -138,7 +136,7 @@ Namespace Database.Infrastrutture
 
         Private Function whereClause(whereExpression As List(Of WhereInfo)) As String
             Dim se As String = String.Empty
-            If whereExpression IsNot Nothing Then
+            If whereExpression IsNot Nothing AndAlso whereExpression.Count > 0 Then
                 For Each si As WhereInfo In whereExpression
                     If se.Length > 0 Then se += " AND "
                     se += String.Format("{0} {1} @{0}", si.campo, If(si.like, "LIKE", "="))
@@ -148,9 +146,9 @@ Namespace Database.Infrastrutture
             Return se
         End Function
 
-        Private Function whereArgs(whereExpression As List(Of WhereInfo)) As DynamicParameters
+        Public Function whereArgs(whereExpression As List(Of WhereInfo)) As DynamicParameters
             Dim se As New DynamicParameters
-            If whereExpression IsNot Nothing Then
+            If whereExpression IsNot Nothing AndAlso whereExpression.Count > 0 Then
                 For Each si As WhereInfo In whereExpression
                     se.Add("@" + si.campo, si.valore)
                 Next

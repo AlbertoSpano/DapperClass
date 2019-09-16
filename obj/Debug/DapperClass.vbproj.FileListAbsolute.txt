@@ -1,6 +1,3 @@
-D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\Resources.resources
-D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\DapperClass.vbproj.GenerateResource.cache
-D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\DapperClass.vbproj.CoreCompileInputs.cache
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\DapperClass.dll.config
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\DapperClass.dll
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\DapperClass.pdb
@@ -103,11 +100,14 @@ D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\System.Xml.XPath.
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\System.Xml.XPath.XDocument.dll
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\Dapper.dll
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\Newtonsoft.Json.dll
+D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\System.Data.SqlServerCe.dll
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\Dapper.xml
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\Newtonsoft.Json.xml
+D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\Resources.resources
+D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\DapperClass.vbproj.GenerateResource.cache
+D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\DapperClass.vbproj.CoreCompileInputs.cache
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\DapperClass.vbproj.CopyComplete
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\DapperClass.dll
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\DapperClass.xml
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\DapperClass.pdb
 D:\Programmi_in_elaborazione\DapperClass\DapperClass\obj\Debug\DapperClass.vbprojAssemblyReference.cache
-D:\Programmi_in_elaborazione\DapperClass\DapperClass\bin\Debug\System.Data.SqlServerCe.dll

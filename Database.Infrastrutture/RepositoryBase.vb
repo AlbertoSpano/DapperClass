@@ -68,40 +68,6 @@ Namespace Database.Infrastrutture
             Return gen.sqlGetCount(whereExpression)
         End Function
 
-        Private Function sortClause(sortExpression As List(Of SortInfo)) As String
-            Dim se As String = String.Empty
-            If sortExpression IsNot Nothing Then
-                For Each si As SortInfo In sortExpression
-                    If se.Length > 0 Then se += ","
-                    se += String.Format("{0}{1}", si.campo, If(si.crescente, "", " DESC"))
-                Next
-                se = " ORDER BY " + se
-            End If
-            Return se
-        End Function
-
-        Private Function whereClause(whereExpression As List(Of WhereInfo)) As String
-            Dim se As String = String.Empty
-            If whereExpression IsNot Nothing Then
-                For Each si As WhereInfo In whereExpression
-                    If se.Length > 0 Then se += " AND "
-                    se += String.Format("{0} {1} @{0}", si.campo, If(si.like, "LIKE", "="))
-                Next
-                se = " WHERE " + se
-            End If
-            Return se
-        End Function
-
-        Private Function whereArgs(whereExpression As List(Of WhereInfo)) As DynamicParameters
-            Dim se As New DynamicParameters
-            If whereExpression IsNot Nothing Then
-                For Each si As WhereInfo In whereExpression
-                    se.Add("@" + si.campo, si.valore)
-                Next
-            End If
-            Return se
-        End Function
-
         Public Function View(sqlString As String) As List(Of T)
             Return cn.Query(Of T)(sqlString)
         End Function
@@ -111,15 +77,15 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function GetFilter(WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As List(Of T) Implements IRepository(Of T).GetFilter
-            Return cn.Query(Of T)(sqlGetFilter(WhereExpression, sortExpression), whereArgs(WhereExpression))
+            Return cn.Query(Of T)(sqlGetFilter(WhereExpression, sortExpression), gen.whereArgs(WhereExpression))
         End Function
 
         Public Function GetPage(pagina As Integer, righePerPagina As Integer, WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As List(Of T) Implements IRepository(Of T).GetPage
-            Return cn.Query(Of T)(sqlGetPage(pagina, righePerPagina, WhereExpression, sortExpression), whereArgs(WhereExpression))
+            Return cn.Query(Of T)(sqlGetPage(pagina, righePerPagina, WhereExpression, sortExpression), gen.whereArgs(WhereExpression))
         End Function
 
         Public Function GetCount(WhereExpression As List(Of WhereInfo)) As Integer Implements IRepository(Of T).GetCount
-            Return cn.Query(Of Integer)(sqlGetCount(WhereExpression), whereArgs(WhereExpression)).First
+            Return cn.Query(Of Integer)(sqlGetCount(WhereExpression), gen.whereArgs(WhereExpression)).First
         End Function
 
         Public Overridable Function FindById(Id As Integer) As T Implements IRepository(Of T).FindById
