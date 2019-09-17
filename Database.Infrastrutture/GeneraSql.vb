@@ -8,9 +8,11 @@ Namespace Database.Infrastrutture
 
         Private ReadOnly Property tabella() As String
         Private ReadOnly props As List(Of PropertyInfo)
-        Private ReadOnly propId As PropertyInfo
+        Private _sqlBase As String
+        Public ReadOnly propId As PropertyInfo
 
-        Public Sub New(tableName As String)
+        Public Sub New(tableName As String, sqlBase As String)
+
             _tabella = tableName
 
             ' ... tipo classe
@@ -28,6 +30,14 @@ Namespace Database.Infrastrutture
                     propId = p
                 End If
             Next
+
+            If sqlBase Is Nothing Then
+                _sqlBase = String.Format("SELECT * FROM {0};", tabella)
+            Else
+                _sqlBase = sqlBase
+            End If
+
+            _sqlBase = _sqlBase.TrimEnd(";")
 
         End Sub
 
@@ -70,7 +80,7 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function sqlFindById() As String
-            Return String.Format("SELECT * FROM {0} WHERE {1}=@{1};", tabella, propId.Name)
+            Return String.Format("{0} WHERE {1}=@{1};", _sqlBase, propId.Name)
         End Function
 
         Public Function sqlAdd() As String
@@ -106,7 +116,7 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function sqlGetAll(sortExpression As List(Of SortInfo)) As String
-            Return String.Format("SELECT * FROM {0}{1};", tabella, sortClause(sortExpression))
+            Return String.Format("{0};", _sqlBase, sortClause(sortExpression))
         End Function
 
         Public Function sqlGetCount(whereExpression As List(Of WhereInfo)) As String
@@ -114,11 +124,14 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function sqlGetFilter(WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String
-            'If WhereExpression Is Nothing OrElse WhereExpression.Count = 0 Then Return sqlGetAll(sortExpression)
             Return String.Format("{0}{1}{2};", sqlGetAll(Nothing).TrimEnd(";"), whereClause(WhereExpression), sortClause(sortExpression))
         End Function
 
         Public Function sqlGetPage(pagina As Integer, righePerPagina As Integer, WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String
+            If sortExpression Is Nothing OrElse sortExpression.Count = 0 Then
+                sortExpression = New List(Of SortInfo)
+                sortExpression.Add(New SortInfo() With {.campo = propId.Name, .crescente = True})
+            End If
             Return String.Format("{0} OFFSET {1} ROWS FETCH NEXT {2} ROWS ONLY;", sqlGetFilter(WhereExpression, sortExpression).TrimEnd(";"), (pagina - 1) * righePerPagina, righePerPagina)
         End Function
 

@@ -1,26 +1,24 @@
 ﻿Imports Dapper
-Imports System.Linq.Expressions
 
 Namespace Database.Infrastrutture
 
     Public Class RepositoryBase(Of T As Class) : Implements IRepository(Of T)
 
+        Private cn As IDbConnection
         Private tabella As String
         Private gen As GeneraSql(Of T)
 
-        Public cn As IDbConnection
-
-        Public Sub New(conn As IDbConnection, tableName As String)
+        Public Sub New(conn As IDbConnection, tableName As String, Optional sqlBase As String = Nothing)
 
             cn = conn
 
             tabella = tableName
 
-            gen = New GeneraSql(Of T)(tableName)
+            gen = New GeneraSql(Of T)(tableName, sqlBase)
 
         End Sub
 
-        Public Function argsFindById(Id As Integer) As DynamicParameters Implements IRepository(Of T).argsFindById
+        Private Function argsFindById(Id As Integer) As DynamicParameters Implements IRepository(Of T).argsFindById
             Return gen.argsFindById(Id)
         End Function
 
@@ -36,7 +34,7 @@ Namespace Database.Infrastrutture
             Return gen.argsDelete(Id)
         End Function
 
-        Public Function sqlFindById() As String Implements IRepository(Of T).sqlFindById
+        Private Function sqlFindById() As String Implements IRepository(Of T).sqlFindById
             Return gen.sqlFindById
         End Function
 
@@ -56,11 +54,11 @@ Namespace Database.Infrastrutture
             Return gen.sqlGetAll(sortExpression)
         End Function
 
-        Public Function sqlGetPage(pagina As Integer, righePerPagina As Integer, WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String Implements IRepository(Of T).sqlGetPage
+        Private Function sqlGetPage(pagina As Integer, righePerPagina As Integer, WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String Implements IRepository(Of T).sqlGetPage
             Return gen.sqlGetPage(pagina, righePerPagina, WhereExpression, sortExpression)
         End Function
 
-        Public Function sqlGetFilter(WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String Implements IRepository(Of T).sqlGetFilter
+        Private Function sqlGetFilter(WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String Implements IRepository(Of T).sqlGetFilter
             Return gen.sqlGetFilter(WhereExpression, sortExpression)
         End Function
 
@@ -68,11 +66,11 @@ Namespace Database.Infrastrutture
             Return gen.sqlGetCount(whereExpression)
         End Function
 
-        Public Function View(sqlString As String) As List(Of T)
+        Private Function View(sqlString As String) As List(Of T)
             Return cn.Query(Of T)(sqlString)
         End Function
 
-        Public Overridable Function GetAll(Optional sortExpression As List(Of SortInfo) = Nothing) As List(Of T) Implements IRepository(Of T).GetAll
+        Public Function GetAll(Optional sortExpression As List(Of SortInfo) = Nothing) As List(Of T) Implements IRepository(Of T).GetAll
             Return cn.Query(Of T)(sqlGetAll(sortExpression))
         End Function
 
@@ -88,11 +86,11 @@ Namespace Database.Infrastrutture
             Return cn.Query(Of Integer)(sqlGetCount(WhereExpression), gen.whereArgs(WhereExpression)).First
         End Function
 
-        Public Overridable Function FindById(Id As Integer) As T Implements IRepository(Of T).FindById
+        Public Function FindById(Id As Integer) As T Implements IRepository(Of T).FindById
             Return cn.Query(Of T)(sqlFindById, argsFindById(Id)).FirstOrDefault
         End Function
 
-        Public Overridable Function Add(recordNew As T) As Integer Implements IRepository(Of T).Add
+        Public Function Add(recordNew As T) As Integer Implements IRepository(Of T).Add
             Try
                 If cn.Execute(sqlAdd, argsAdd(recordNew)) = 1 Then
                     Return cn.Query(Of Integer)("Select @@IDENTITY;").First
@@ -106,7 +104,7 @@ Namespace Database.Infrastrutture
 
         End Function
 
-        Public Overridable Function Update(recordEdit As T) As Boolean Implements IRepository(Of T).Update
+        Public Function Update(recordEdit As T) As Boolean Implements IRepository(Of T).Update
             Try
                 Return cn.Execute(sqlUpdate, argsUpdate(recordEdit)) = 1
             Catch ex As Exception
@@ -115,7 +113,7 @@ Namespace Database.Infrastrutture
             End Try
         End Function
 
-        Public Overridable Function Delete(Id As Integer) As Boolean Implements IRepository(Of T).Delete
+        Public Function Delete(Id As Integer) As Boolean Implements IRepository(Of T).Delete
             Return cn.Execute(sqlDelete, argsDelete(Id)) = 1
         End Function
 
