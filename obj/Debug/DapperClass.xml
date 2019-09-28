@@ -22,5 +22,18 @@ DapperClass
   ricerche di risorse eseguite utilizzando questa classe di risorse fortemente tipizzata.
 </summary>
 </member>
+<member name="F:Database.Infrastrutture.GeneraSql`1.sel">
+ <summary>
+ Una volta istanziata la classe, è possibile creare i join (INNER, LEFT, RIGHT)
+ tra la tabella dell'istanza e la tabella corrispondente alla classe TJoin
+ Una volta creati i join, il metodo GetSql restituisce la sgtringa sql
+ Il metodo GetSql riceve i seguenti parametri:
+     - where: lista delle condizioni where da applicare
+     - sort:  lista delle colonne da ordinare
+     - pagina:   il numero di pagina da estrarre
+     - righeperpagina: il numero di righe da restituire
+ </summary>
+ 
+</member>
 </members>
 </doc>

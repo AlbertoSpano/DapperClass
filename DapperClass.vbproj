@@ -89,6 +89,7 @@
     <Compile Include="Database.Infrastrutture\GeneraSql.vb" />
     <Compile Include="Database.Infrastrutture\IRepository.vb" />
     <Compile Include="Database.Infrastrutture\Metodi.vb" />
+    <Compile Include="Database.Infrastrutture\PropertyGet.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>

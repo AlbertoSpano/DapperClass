@@ -4,38 +4,41 @@ Imports Database.Infrastrutture.Attributi
 
 Namespace Database.Infrastrutture
 
+    Public Enum TipiWhere
+        [NOTHING]
+        [AND]
+        [OR]
+        [NOT]
+    End Enum
+
     Public Class GeneraSql(Of T As Class)
 
         Private ReadOnly Property tabella() As String
-        Private ReadOnly props As List(Of PropertyInfo)
         Private _sqlBase As String
-        Public ReadOnly propId As PropertyInfo
+        Private propGet As PropertyGet(Of T)
 
-        Public Sub New(tableName As String, sqlBase As String)
+        Public ReadOnly Property props As List(Of PropertyInfo)
+            Get
+                Return propGet.propsWithoutId
+            End Get
+        End Property
 
+        Public ReadOnly Property propId As PropertyInfo
+            Get
+                Return propGet.propId
+            End Get
+        End Property
+
+        Public Sub New(Optional tableName As String = Nothing, Optional sqlBase As String = Nothing)
+
+            ' ... classe con proprietà della classe T
+            propGet = New PropertyGet(Of T)
+
+            If tableName Is Nothing Then tableName = propGet.name
             _tabella = tableName
 
-            ' ... tipo classe
-            Dim tipo As Type = GetType(T)
-
-            ' ... inizializza elenco propertyInfo esclusa la primaryKey
-            props = New List(Of PropertyInfo)
-
-            ' ... propertyInfo dei campi
-            props = New List(Of PropertyInfo)
-            For Each p As PropertyInfo In tipo.GetRuntimeProperties
-                If Metodi.GetAttributeFrom(Of PrimaryKey)(tipo, p.Name) Is Nothing Then
-                    props.Add(p)
-                Else
-                    propId = p
-                End If
-            Next
-
-            If sqlBase Is Nothing Then
-                _sqlBase = String.Format("SELECT * FROM {0};", tabella)
-            Else
-                _sqlBase = sqlBase
-            End If
+            If sqlBase Is Nothing Then sqlBase = String.Format("SELECT * FROM {0};", tabella)
+            _sqlBase = sqlBase
 
             _sqlBase = _sqlBase.TrimEnd(";")
 
@@ -115,60 +118,144 @@ Namespace Database.Infrastrutture
             Return String.Format("DELETE FROM {0} WHERE {1}=@{1};", tabella, propId.Name)
         End Function
 
-        Public Function sqlGetAll(sortExpression As List(Of SortInfo)) As String
-            Return String.Format("{0};", _sqlBase, sortClause(sortExpression))
+        Public Function sqlGetAll() As String
+            Return String.Format("{0};", _sqlBase)
         End Function
 
-        Public Function sqlGetCount(whereExpression As List(Of WhereInfo)) As String
-            Return String.Format("SELECT COUNT({0}) FROM {1} {2};", propId.Name, tabella, whereClause(whereExpression))
+
+        ''' <summary>
+        ''' Una volta istanziata la classe, è possibile creare i join (INNER, LEFT, RIGHT)
+        ''' tra la tabella dell'istanza e la tabella corrispondente alla classe TJoin
+        ''' Una volta creati i join, il metodo GetSql restituisce la sgtringa sql
+        ''' Il metodo GetSql riceve i seguenti parametri:
+        '''     - where: lista delle condizioni where da applicare
+        '''     - sort:  lista delle colonne da ordinare
+        '''     - pagina:   il numero di pagina da estrarre
+        '''     - righeperpagina: il numero di righe da restituire
+        ''' </summary>
+        ''' 
+        Private sel As String = String.Empty
+        Private join As String = String.Empty
+        Private wh As String = String.Empty
+        Private params As New DynamicParameters
+        Private sh As String = String.Empty
+        Private ph As String = String.Empty
+
+        Public Function InnerJoin(Of TJoin As Class)(Optional colPrincipal As String = Nothing, Optional colSecondary As String = Nothing) As GeneraSql(Of T)
+
+            Dim pJoin As New PropertyGet(Of TJoin)
+
+            colPrincipal = If(colPrincipal, pJoin.propId.Name)
+            colSecondary = If(colSecondary, colPrincipal)
+
+            GenericJoin(Of TJoin)("INNER", colPrincipal, colSecondary, pJoin)
+
+            Return Me
+
         End Function
 
-        Public Function sqlGetFilter(WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String
-            Return String.Format("{0}{1}{2};", sqlGetAll(Nothing).TrimEnd(";"), whereClause(WhereExpression), sortClause(sortExpression))
+        Public Function RightJoin(Of TJoin As Class)(Optional colRight As String = Nothing, Optional colLeft As String = Nothing) As GeneraSql(Of T)
+
+            Dim pJoin As New PropertyGet(Of TJoin)
+
+            colRight = If(colRight, pJoin.propId.Name)
+            colLeft = If(colLeft, colRight)
+
+            GenericJoin(Of TJoin)("RIGHT", colLeft, colRight, pJoin)
+
+            Return Me
+
         End Function
 
-        Public Function sqlGetPage(pagina As Integer, righePerPagina As Integer, WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String
-            If sortExpression Is Nothing OrElse sortExpression.Count = 0 Then
-                sortExpression = New List(Of SortInfo)
-                sortExpression.Add(New SortInfo() With {.campo = propId.Name, .crescente = True})
+        Public Function LeftJoin(Of TJoin As Class)(Optional colLeft As String = Nothing, Optional colRight As String = Nothing) As GeneraSql(Of T)
+
+            Dim pJoin As New PropertyGet(Of TJoin)
+
+            colLeft = If(colLeft, pJoin.propId.Name)
+            colRight = If(colRight, colLeft)
+
+            GenericJoin(Of TJoin)("LEFT", colLeft, colRight, pJoin)
+
+            Return Me
+
+        End Function
+
+        Public Function Where(tipoWhere As TipiWhere, whereList As List(Of WhereInfo)) As GeneraSql(Of T)
+
+            If tipoWhere = TipiWhere.NOTHING Then
+                wh = String.Empty
+                params = New DynamicParameters
             End If
-            Return String.Format("{0} OFFSET {1} ROWS FETCH NEXT {2} ROWS ONLY;", sqlGetFilter(WhereExpression, sortExpression).TrimEnd(";"), (pagina - 1) * righePerPagina, righePerPagina)
-        End Function
 
-        Private Function sortClause(sortExpression As List(Of SortInfo)) As String
-            Dim se As String = String.Empty
-            If sortExpression IsNot Nothing AndAlso sortExpression.Count > 0 Then
-                For Each si As SortInfo In sortExpression
-                    If se.Length > 0 Then se += ","
-                    se += String.Format("{0}{1}", si.campo, If(si.crescente, "", " DESC"))
+            If whereList IsNot Nothing AndAlso whereList.Count > 0 Then
+                For Each si As WhereInfo In whereList
+                    ' ... condizione where
+                    If wh.Length > 0 Then wh += String.Format(" {0} ", tipoWhere)
+                    wh += String.Format("{0} {1} @{2}", si.campo, If(si.like, "LIKE", "="), si.campo.Replace(".", "_"))
+                    ' ... elenco parametri
+                    params.Add("@" + si.campo.Replace(".", "_"), si.valore)
                 Next
-                se = " ORDER BY " + se
+                wh = String.Format("({0})", wh)
             End If
-            Return se
+
+            Return Me
+
         End Function
 
-        Private Function whereClause(whereExpression As List(Of WhereInfo)) As String
-            Dim se As String = String.Empty
-            If whereExpression IsNot Nothing AndAlso whereExpression.Count > 0 Then
-                For Each si As WhereInfo In whereExpression
-                    If se.Length > 0 Then se += " AND "
-                    se += String.Format("{0} {1} @{0}", si.campo, If(si.like, "LIKE", "="))
-                Next
-                se = " WHERE " + se
-            End If
-            Return se
-        End Function
+        Public Function Sort(sortList As List(Of SortInfo)) As GeneraSql(Of T)
 
-        Public Function whereArgs(whereExpression As List(Of WhereInfo)) As DynamicParameters
-            Dim se As New DynamicParameters
-            If whereExpression IsNot Nothing AndAlso whereExpression.Count > 0 Then
-                For Each si As WhereInfo In whereExpression
-                    se.Add("@" + si.campo, si.valore)
+            If sortList IsNot Nothing AndAlso sortList.Count > 0 Then
+                For Each si As SortInfo In sortList
+                    If sh.Length > 0 Then sh += ","
+                    sh += String.Format("{0}{1}", si.campo, If(si.crescente, "", " DESC"))
                 Next
             End If
-            Return se
+
+            Return Me
+
         End Function
 
+        Public Function Paging(pagina As Integer, righeperpagina As Integer) As GeneraSql(Of T)
+            If pagina = 0 Or righeperpagina = 0 Then Return Me
+            ph = String.Format("OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", (pagina - 1) * righeperpagina, righeperpagina)
+            Return Me
+        End Function
+
+        Public Function GetSql() As String
+            If sel.Length = 0 Then sel = propGet.name + ".*"
+            If join.Length = 0 Then join = propGet.name
+            If wh.Length > 0 Then wh = " WHERE " + wh
+            If sh.Length > 0 Then sh = " ORDER BY " + sh
+            Return String.Format("SELECT {0} FROM {1} {2} {3} {4};", sel, join, wh, sh, ph)
+        End Function
+
+        Public Function GetParams() As DynamicParameters
+            Return params
+        End Function
+
+        Private Sub GenericJoin(Of TJoin As Class)(tipojOIN As String, colPrincipal As String, colSecondary As String, pJoin As PropertyGet(Of TJoin))
+
+            If propGet.propsAll.FirstOrDefault(Function(x) String.Compare(x.Name, colPrincipal, True) = 0) Is Nothing Then
+                Throw New Exception(String.Format("La colonna {0} non appartiene alla classe {1}!", colPrincipal, propGet.name))
+            End If
+
+            If pJoin.propsAll.FirstOrDefault(Function(x) String.Compare(x.Name, colSecondary, True) = 0) Is Nothing Then
+                Throw New Exception(String.Format("La colonna {0} non appartiene alla classe {1}!", colSecondary, pJoin.name))
+            End If
+
+            ' ... genera lista campi select
+            If sel.Length = 0 Then sel = propGet.name + ".*"
+            For Each pA As PropertyInfo In pJoin.propsAll
+                sel += If(sel.Length = 0, "", ",")
+                sel += String.Format("{0}.{1}", pJoin.name, pA.Name)
+            Next
+
+            ' ... genera il join
+            If join.Length = 0 Then join = propGet.name
+            join += String.Format(" {1} JOIN {2} ON {0}.{3} = {2}.{4}", propGet.name, tipojOIN, pJoin.name, colPrincipal, colSecondary)
+            join = "(" + join + ")"
+
+        End Sub
 
     End Class
 

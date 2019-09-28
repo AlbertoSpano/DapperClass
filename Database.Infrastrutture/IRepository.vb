@@ -5,23 +5,18 @@ Namespace Database.Infrastrutture
 
     Public Interface IRepository(Of T As Class)
 
-        Function argsFindById(Id As Integer) As DynamicParameters
-        Function argsAdd(record As T) As DynamicParameters
-        Function argsUpdate(record As T) As DynamicParameters
-        Function argsDelete(Id As Integer) As DynamicParameters
+        'Function argsFindById(Id As Integer) As DynamicParameters
+        'Function argsAdd(record As T) As DynamicParameters
+        'Function argsUpdate(record As T) As DynamicParameters
+        'Function argsDelete(Id As Integer) As DynamicParameters
 
-        Function sqlGetAll(Optional sortExpression As List(Of SortInfo) = Nothing) As String
-        Function sqlGetFilter(WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String
-        Function sqlGetPage(pagina As Integer, righePerPagina As Integer, WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As String
-        Function sqlFindById() As String
-        Function sqlAdd() As String
-        Function sqlUpdate() As String
-        Function sqlDelete() As String
+        'Function sqlGetAll() As String
+        'Function sqlFindById() As String
+        'Function sqlAdd() As String
+        'Function sqlUpdate() As String
+        'Function sqlDelete() As String
 
-        Function GetCount(WhereExpression As List(Of WhereInfo)) As Integer
-        Function GetAll(Optional sortExpression As List(Of SortInfo) = Nothing) As List(Of T)
-        Function GetFilter(WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As List(Of T)
-        Function GetPage(pagina As Integer, righePerPagina As Integer, WhereExpression As List(Of WhereInfo), sortExpression As List(Of SortInfo)) As List(Of T)
+        Function GetAll() As List(Of T)
         Function GetForSelect() As List(Of KeyValue)
         Function FindById(Id As Integer) As T
         Function Add(customer As T) As Integer
