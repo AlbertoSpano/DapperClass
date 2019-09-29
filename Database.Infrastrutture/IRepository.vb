@@ -17,7 +17,7 @@ Namespace Database.Infrastrutture
         'Function sqlDelete() As String
 
         Function GetAll() As List(Of T)
-        Function GetForSelect() As List(Of KeyValue)
+        Function GetForSelect(Optional keyField As String = Nothing, Optional valueField As String = Nothing) As Dictionary(Of Integer, String)
         Function FindById(Id As Integer) As T
         Function Add(customer As T) As Integer
         Function Update(customer As T) As Boolean

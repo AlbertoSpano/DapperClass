@@ -229,6 +229,10 @@ Namespace Database.Infrastrutture
             Return String.Format("SELECT {0} FROM {1} {2} {3} {4};", sel, join, wh, sh, ph)
         End Function
 
+        Public Function GetSql(sql As String) As String
+            Return String.Format("{0} {1};", sql, ph)
+        End Function
+
         Public Function GetParams() As DynamicParameters
             Return params
         End Function

@@ -2,17 +2,17 @@
 
 Namespace Database.Infrastrutture
 
-    Public MustInherit Class RepositoryBase(Of T As Class) : Implements IRepository(Of T)
+    Public MustInherit Class RepositoryBase(Of T As Class) : Implements IRepository(Of T) : Implements IRecord
 
-        Private cn As IDbConnection
         Private tabella As String
+        Public cn As IDbConnection
         Public gen As GeneraSql(Of T)
 
-        Public Sub New(conn As IDbConnection, tableName As String, Optional sqlBase As String = Nothing)
+        Public Sub New(conn As IDbConnection, Optional tableName As String = Nothing, Optional sqlBase As String = Nothing)
 
             cn = conn
 
-            tabella = tableName
+            tabella = If(tableName, GetType(T).Name)
 
             gen = New GeneraSql(Of T)(tableName, sqlBase)
 
@@ -88,11 +88,25 @@ Namespace Database.Infrastrutture
             Return cn.Execute(sqlDelete, argsDelete(Id)) = 1
         End Function
 
-        Public Overridable Function GetForSelect() As List(Of KeyValue) Implements IRepository(Of T).GetForSelect
+        Public MustOverride ReadOnly Property DisplayCols As Dictionary(Of String, String) Implements IRecord.DisplayCols
+
+        Public MustOverride ReadOnly Property DESC_PROP As String Implements IRecord.DESC_PROP
+
+        Public Overridable Function View(sort As List(Of SortInfo), where As List(Of WhereInfo), Optional pagina As Integer = 0, Optional righeperpagina As Integer = 0) As List(Of T)
             Throw New NotImplementedException()
         End Function
 
-        Public MustOverride Function View(sort As List(Of SortInfo), where As List(Of WhereInfo), Optional pagina As Integer = 0, Optional righeperpagina As Integer = 0) As List(Of T)
+        Public Overridable Function View(sql As String, Optional pagina As Integer = 0, Optional righeperpagina As Integer = 0) As List(Of T)
+            Throw New NotImplementedException()
+        End Function
+
+        Public Overridable Function GetForSelect(Optional keyField As String = Nothing, Optional valueField As String = Nothing) As Dictionary(Of Integer, String) Implements IRepository(Of T).GetForSelect
+            keyField = If(keyField, gen.propId.Name)
+            valueField = If(valueField, DESC_PROP)
+            Dim sql As String = String.Format("SELECT {0} AS [Key], {1} AS [Value] FROM {2} ORDER BY {1};", keyField, valueField, tabella)
+            Return cn.Query(Of KeyValuePair(Of Integer, String))(sql).ToDictionary(Function(row) row.Key, Function(row) row.Value)
+        End Function
+
 
     End Class
 
