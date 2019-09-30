@@ -11,9 +11,15 @@ Namespace Database.Infrastrutture
         [NOT]
     End Enum
 
+    Public Enum TipiJoin
+        INNER
+        LEFT
+        RIGHT
+    End Enum
+
     Public Class GeneraSql(Of T As Class)
 
-        Private ReadOnly Property tabella() As String
+        Public ReadOnly Property tabella() As String
         Private _sqlBase As String
         Private propGet As PropertyGet(Of T)
 
@@ -140,47 +146,76 @@ Namespace Database.Infrastrutture
         Private params As New DynamicParameters
         Private sh As String = String.Empty
         Private ph As String = String.Empty
+        Private nj As String = String.Empty
+        Private gb As String = String.Empty
 
-        Public Function InnerJoin(Of TJoin As Class)(Optional colPrincipal As String = Nothing, Optional colSecondary As String = Nothing) As GeneraSql(Of T)
+        Public Function GroupBy(sqlGroup As String) As GeneraSql(Of T)
 
-            Dim pJoin As New PropertyGet(Of TJoin)
+            If gb.Length > 0 Then Throw New Exception("Group By già impostato!")
 
-            colPrincipal = If(colPrincipal, pJoin.propId.Name)
-            colSecondary = If(colSecondary, colPrincipal)
+            If Not sqlGroup.Contains("GROUP BY") Then sqlGroup = "GROUP BY" + sqlGroup
 
-            GenericJoin(Of TJoin)("INNER", colPrincipal, colSecondary, pJoin)
+            gb = sqlGroup
 
             Return Me
 
         End Function
 
-        Public Function RightJoin(Of TJoin As Class)(Optional colRight As String = Nothing, Optional colLeft As String = Nothing) As GeneraSql(Of T)
+        Public Function JoinNested(tipoJoin As TipiJoin, sqlNested As String, [Alias] As String, colPrincipal_ON As String, colSecondary_ON As String) As GeneraSql(Of T)
+
+            If nj.Length > 0 Then Throw New Exception("Nested Join già impostato!")
+
+            nj = sqlNested
+
+            nj = nj.TrimStart("(")
+            nj = nj.TrimEnd(")")
+
+            nj = String.Format("{0} JOIN ({1}) AS {2} ON {3}.{4}={2}.{5}", tipoJoin, nj, [Alias], propGet.name, colPrincipal_ON, colSecondary_ON)
+
+            Return Me
+
+        End Function
+
+        Public Function InnerJoin(Of TJoin As Class)(Optional colPrincipal_ON As String = Nothing, Optional colSecondary_ON As String = Nothing, Optional colsPrincipal As List(Of String) = Nothing, Optional colsSecondary As List(Of String) = Nothing) As GeneraSql(Of T)
+
+            Dim pJoin As New PropertyGet(Of TJoin)
+
+            colPrincipal_ON = If(colPrincipal_ON, pJoin.propId.Name)
+            colSecondary_ON = If(colSecondary_ON, colPrincipal_ON)
+
+            GenericJoin(Of TJoin)(TipiJoin.INNER, colPrincipal_ON, colSecondary_ON, pJoin, colsPrincipal, colsSecondary)
+
+            Return Me
+
+        End Function
+
+        Public Function RightJoin(Of TJoin As Class)(Optional colRight As String = Nothing, Optional colLeft As String = Nothing, Optional colsPrincipal As List(Of String) = Nothing, Optional colsSecondary As List(Of String) = Nothing) As GeneraSql(Of T)
 
             Dim pJoin As New PropertyGet(Of TJoin)
 
             colRight = If(colRight, pJoin.propId.Name)
             colLeft = If(colLeft, colRight)
 
-            GenericJoin(Of TJoin)("RIGHT", colLeft, colRight, pJoin)
+            GenericJoin(Of TJoin)(TipiJoin.RIGHT, colLeft, colRight, pJoin, colsPrincipal, colsSecondary)
 
             Return Me
 
         End Function
 
-        Public Function LeftJoin(Of TJoin As Class)(Optional colLeft As String = Nothing, Optional colRight As String = Nothing) As GeneraSql(Of T)
+        Public Function LeftJoin(Of TJoin As Class)(Optional colLeft As String = Nothing, Optional colRight As String = Nothing, Optional colsPrincipal As List(Of String) = Nothing, Optional colsSecondary As List(Of String) = Nothing) As GeneraSql(Of T)
 
             Dim pJoin As New PropertyGet(Of TJoin)
 
             colLeft = If(colLeft, pJoin.propId.Name)
             colRight = If(colRight, colLeft)
 
-            GenericJoin(Of TJoin)("LEFT", colLeft, colRight, pJoin)
+            GenericJoin(Of TJoin)(TipiJoin.LEFT, colLeft, colRight, pJoin, colsPrincipal, colsSecondary)
 
             Return Me
 
         End Function
 
-        Public Function Where(tipoWhere As TipiWhere, whereList As List(Of WhereInfo)) As GeneraSql(Of T)
+        Public Function WhereWithParameters(tipoWhere As TipiWhere, whereList As List(Of WhereInfo)) As GeneraSql(Of T)
 
             If tipoWhere = TipiWhere.NOTHING Then
                 wh = String.Empty
@@ -197,6 +232,32 @@ Namespace Database.Infrastrutture
                 Next
                 wh = String.Format("({0})", wh)
             End If
+
+            Return Me
+
+        End Function
+
+        Public Function Where(tipoWhere As TipiWhere, campo As String, valore As Object) As GeneraSql(Of T)
+
+            If tipoWhere = TipiWhere.NOTHING Then
+                wh = String.Empty
+                params = New DynamicParameters
+            End If
+
+            Dim delimiter As String = ""
+            If TypeOf valore Is String Then
+                delimiter = "'"
+                valore = valore.ToString.Replace("'", "''")
+            End If
+
+            If Not campo.Contains(".") Then
+                campo = String.Format("{0}.{1}", tabella, campo)
+            End If
+
+            ' ... condizione where
+            If wh.Length > 0 Then wh += String.Format(" {0} ", tipoWhere)
+            wh += String.Format("{0} = {1}{2}{1}", campo, delimiter, valore)
+            wh = String.Format("({0})", wh)
 
             Return Me
 
@@ -224,9 +285,9 @@ Namespace Database.Infrastrutture
         Public Function GetSql() As String
             If sel.Length = 0 Then sel = propGet.name + ".*"
             If join.Length = 0 Then join = propGet.name
-            If wh.Length > 0 Then wh = " WHERE " + wh
-            If sh.Length > 0 Then sh = " ORDER BY " + sh
-            Return String.Format("SELECT {0} FROM {1} {2} {3} {4};", sel, join, wh, sh, ph)
+            If wh.Length > 0 Then wh = If(wh.Contains("WHERE"), wh, " WHERE " + wh)
+            If sh.Length > 0 Then sh = If(sh.Contains("ORDER BY"), sh, " ORDER BY " + sh)
+            Return String.Format("SELECT {0} FROM {1} {2} {3} {4} {5};", sel, join, nj, wh, gb, sh, ph)
         End Function
 
         Public Function GetSql(sql As String) As String
@@ -237,7 +298,7 @@ Namespace Database.Infrastrutture
             Return params
         End Function
 
-        Private Sub GenericJoin(Of TJoin As Class)(tipojOIN As String, colPrincipal As String, colSecondary As String, pJoin As PropertyGet(Of TJoin))
+        Private Sub GenericJoin(Of TJoin As Class)(tipojOIN As TipiJoin, colPrincipal As String, colSecondary As String, pJoin As PropertyGet(Of TJoin), colsPrincipal As List(Of String), colsSecondary As List(Of String))
 
             If propGet.propsAll.FirstOrDefault(Function(x) String.Compare(x.Name, colPrincipal, True) = 0) Is Nothing Then
                 Throw New Exception(String.Format("La colonna {0} non appartiene alla classe {1}!", colPrincipal, propGet.name))
@@ -248,11 +309,25 @@ Namespace Database.Infrastrutture
             End If
 
             ' ... genera lista campi select
-            If sel.Length = 0 Then sel = propGet.name + ".*"
-            For Each pA As PropertyInfo In pJoin.propsAll
+            If sel.Length = 0 Then
+                If colsPrincipal Is Nothing Then
+                    sel = propGet.name + ".*"
+                Else
+                    For Each c As String In colsPrincipal
+                        sel += If(sel.Length = 0, "", ",")
+                        sel += String.Format("{0}.{1}", propGet.name, c)
+                    Next
+                End If
+            End If
+            If colsSecondary Is Nothing Then
                 sel += If(sel.Length = 0, "", ",")
-                sel += String.Format("{0}.{1}", pJoin.name, pA.Name)
-            Next
+                sel += pJoin.name + ".*"
+            Else
+                For Each c As String In colsSecondary
+                    sel += If(sel.Length = 0, "", ",")
+                    sel += String.Format("{0}.{1}", pJoin.name, c)
+                Next
+            End If
 
             ' ... genera il join
             If join.Length = 0 Then join = propGet.name
