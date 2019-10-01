@@ -15,20 +15,4 @@ Namespace Database.Infrastrutture
 
     End Interface
 
-    Public Class KeyValue
-        Public key As Object
-        Public value As Object
-    End Class
-
-    Public Class SortInfo
-        Public campo As String
-        Public crescente As Boolean
-    End Class
-
-    Public Class WhereInfo
-        Public campo As String
-        Public valore As Object
-        Public [like] As Boolean
-    End Class
-
 End Namespace
