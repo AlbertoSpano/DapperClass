@@ -137,7 +137,7 @@ Namespace Database.Infrastrutture
         '''     - where: lista delle condizioni where da applicare
         '''     - sort:  lista delle colonne da ordinare
         '''     - pagina:   il numero di pagina da estrarre
-        '''     - righeperpagina: il numero di righe da restituire
+        '''     - pageSize: il numero di righe da restituire
         ''' </summary>
         ''' 
         Private sel As String = String.Empty
@@ -149,11 +149,20 @@ Namespace Database.Infrastrutture
         Private nj As String = String.Empty
         Private gb As String = String.Empty
 
+        Public Sub Clear()
+            sel = String.Empty
+            join = String.Empty
+            wh = String.Empty
+            params = New DynamicParameters
+            sh = String.Empty
+            ph = String.Empty
+            nj = String.Empty
+            gb = String.Empty
+        End Sub
+
         Public Function GroupBy(sqlGroup As String) As GeneraSql(Of T)
 
             If gb.Length > 0 Then Throw New Exception("Group By già impostato!")
-
-            If Not sqlGroup.Contains("GROUP BY") Then sqlGroup = "GROUP BY" + sqlGroup
 
             gb = sqlGroup
 
@@ -276,9 +285,9 @@ Namespace Database.Infrastrutture
 
         End Function
 
-        Public Function Paging(pagina As Integer, righeperpagina As Integer) As GeneraSql(Of T)
-            If pagina = 0 Or righeperpagina = 0 Then Return Me
-            ph = String.Format("OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", (pagina - 1) * righeperpagina, righeperpagina)
+        Public Function Paging(pagina As Integer, pageSize As Integer) As GeneraSql(Of T)
+            If pagina = 0 Or pageSize = 0 Then Return Me
+            ph = String.Format("OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", (pagina - 1) * pageSize, pageSize)
             Return Me
         End Function
 
@@ -287,7 +296,15 @@ Namespace Database.Infrastrutture
             If join.Length = 0 Then join = propGet.name
             If wh.Length > 0 Then wh = If(wh.Contains("WHERE"), wh, " WHERE " + wh)
             If sh.Length > 0 Then sh = If(sh.Contains("ORDER BY"), sh, " ORDER BY " + sh)
-            Return String.Format("SELECT {0} FROM {1} {2} {3} {4} {5};", sel, join, nj, wh, gb, sh, ph)
+            If gb.Length > 0 Then gb = If(gb.Contains("GROUP BY"), gb, " GROUP BY " + gb)
+            Return String.Format("SELECT {0} FROM {1} {2} {3} {4} {5} {6};", sel, join, nj, wh, gb, sh, ph)
+        End Function
+
+        Public Function GetSqlCount() As String
+            If join.Length = 0 Then join = propGet.name
+            If wh.Length > 0 Then wh = If(wh.Contains("WHERE"), wh, " WHERE " + wh)
+            If gb.Length > 0 Then gb = If(gb.Contains("GROUP BY"), gb, " GROUP BY " + gb)
+            Return String.Format("SELECT COUNT(*) FROM {0} {1} {2} {3};", join, nj, wh, gb)
         End Function
 
         Public Function GetSql(sql As String) As String

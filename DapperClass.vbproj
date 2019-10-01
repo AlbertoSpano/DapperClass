@@ -87,6 +87,7 @@
   <ItemGroup>
     <Compile Include="Database.Infrastrutture\Attributi.vb" />
     <Compile Include="Database.Infrastrutture\GeneraSql.vb" />
+    <Compile Include="Database.Infrastrutture\IPaging.vb" />
     <Compile Include="Database.Infrastrutture\IRecord.vb" />
     <Compile Include="Database.Infrastrutture\IRepository.vb" />
     <Compile Include="Database.Infrastrutture\Metodi.vb" />

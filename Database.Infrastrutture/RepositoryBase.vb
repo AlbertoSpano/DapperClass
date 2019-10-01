@@ -2,7 +2,7 @@
 
 Namespace Database.Infrastrutture
 
-    Public MustInherit Class RepositoryBase(Of T As Class) : Implements IRepository(Of T) : Implements IRecord
+    Public MustInherit Class RepositoryBase(Of T As Class) : Implements IRepository(Of T) : Implements IRecord : Implements IPaging
 
         Private tabella As String
         Public cn As IDbConnection
@@ -92,21 +92,37 @@ Namespace Database.Infrastrutture
 
         Public MustOverride ReadOnly Property DESC_PROP As String Implements IRecord.DESC_PROP
 
-        Public Overridable Function View(sort As List(Of SortInfo), where As List(Of WhereInfo), Optional pagina As Integer = 0, Optional righeperpagina As Integer = 0) As List(Of T)
+        Public Overridable Function View(sort As List(Of SortInfo), where As List(Of WhereInfo), Optional pagina As Integer = 0, Optional pageSize As Integer = 0) As List(Of T)
             Throw New NotImplementedException()
         End Function
 
-        Public Overridable Function View(sql As String, Optional pagina As Integer = 0, Optional righeperpagina As Integer = 0) As List(Of T)
+        Public Overridable Function View(sql As String, Optional pagina As Integer = 0, Optional pageSize As Integer = 0) As List(Of T)
             Throw New NotImplementedException()
         End Function
 
-        Public Overridable Function GetForSelect(Optional keyField As String = Nothing, Optional valueField As String = Nothing) As Dictionary(Of Integer, String) Implements IRepository(Of T).GetForSelect
+        Public Overridable Function GetForSelect(Optional keyField As String = Nothing, Optional valueField As String = Nothing, Optional allText As String = Nothing) As Dictionary(Of Integer, String) Implements IRepository(Of T).GetForSelect
+            allText = If(allText, "...")
             keyField = If(keyField, gen.propId.Name)
             valueField = If(valueField, DESC_PROP)
             Dim sql As String = String.Format("SELECT {0} AS [Key], {1} AS [Value] FROM {2} ORDER BY {1};", keyField, valueField, tabella)
             Return cn.Query(Of KeyValuePair(Of Integer, String))(sql).ToDictionary(Function(row) row.Key, Function(row) row.Value)
         End Function
 
+        Public Sub GetPageCount(pageSize As Integer) Implements IPaging.PageCount
+
+            ' ... numero pagine
+            If pageSize = 0 Then
+                CurrentPagesCount = 1
+            Else
+                pageSize = If(pageSize > CurrentRowsCount, CurrentRowsCount, pageSize)
+                CurrentPagesCount = (CurrentRowsCount \ pageSize) + If(CurrentRowsCount Mod pageSize = 0, 0, 1)
+            End If
+
+        End Sub
+
+        Public Property CurrentRowsCount As Integer Implements IPaging.CurrentRowsCount
+
+        Public Property CurrentPagesCount As Integer Implements IPaging.CurrentPagesCount
 
     End Class
 

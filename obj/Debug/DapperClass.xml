@@ -31,7 +31,7 @@ DapperClass
      - where: lista delle condizioni where da applicare
      - sort:  lista delle colonne da ordinare
      - pagina:   il numero di pagina da estrarre
-     - righeperpagina: il numero di righe da restituire
+     - pageSize: il numero di righe da restituire
  </summary>
  
 </member>
