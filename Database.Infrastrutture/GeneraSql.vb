@@ -40,7 +40,7 @@ Namespace Database.Infrastrutture
             ' ... classe con proprietà della classe T
             propGet = New PropertyGet(Of T)
 
-            If tableName Is Nothing Then tableName = propGet.name
+            If tableName Is Nothing Then tableName = propGet.tableName
             _tabella = tableName
 
             If sqlBase Is Nothing Then sqlBase = String.Format("SELECT * FROM {0};", tabella)
@@ -179,7 +179,7 @@ Namespace Database.Infrastrutture
             nj = nj.TrimStart("(")
             nj = nj.TrimEnd(")")
 
-            nj = String.Format("{0} JOIN ({1}) AS {2} ON {3}.{4}={2}.{5}", tipoJoin, nj, [Alias], propGet.name, colPrincipal_ON, colSecondary_ON)
+            nj = String.Format("{0} JOIN ({1}) AS {2} ON {3}.{4}={2}.{5}", tipoJoin, nj, [Alias], propGet.tableName, colPrincipal_ON, colSecondary_ON)
 
             Return Me
 
@@ -292,8 +292,8 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function GetSql() As String
-            If sel.Length = 0 Then sel = propGet.name + ".*"
-            If join.Length = 0 Then join = propGet.name
+            If sel.Length = 0 Then sel = propGet.tableName + ".*"
+            If join.Length = 0 Then join = propGet.tableName
             If wh.Length > 0 Then wh = If(wh.Contains("WHERE"), wh, " WHERE " + wh)
             If sh.Length > 0 Then sh = If(sh.Contains("ORDER BY"), sh, " ORDER BY " + sh)
             If gb.Length > 0 Then gb = If(gb.Contains("GROUP BY"), gb, " GROUP BY " + gb)
@@ -301,7 +301,7 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function GetSqlCount() As String
-            If join.Length = 0 Then join = propGet.name
+            If join.Length = 0 Then join = propGet.tableName
             If wh.Length > 0 Then wh = If(wh.Contains("WHERE"), wh, " WHERE " + wh)
             If gb.Length > 0 Then gb = If(gb.Contains("GROUP BY"), gb, " GROUP BY " + gb)
             Return String.Format("SELECT COUNT(*) FROM {0} {1} {2} {3};", join, nj, wh, gb)
@@ -318,37 +318,37 @@ Namespace Database.Infrastrutture
         Private Sub GenericJoin(Of TJoin As Class)(tipojOIN As TipiJoin, colPrincipal As String, colSecondary As String, pJoin As PropertyGet(Of TJoin), colsPrincipal As List(Of String), colsSecondary As List(Of String))
 
             If propGet.propsAll.FirstOrDefault(Function(x) String.Compare(x.Name, colPrincipal, True) = 0) Is Nothing Then
-                Throw New Exception(String.Format("La colonna {0} non appartiene alla classe {1}!", colPrincipal, propGet.name))
+                Throw New Exception(String.Format("La colonna {0} non appartiene alla classe {1}!", colPrincipal, propGet.tableName))
             End If
 
             If pJoin.propsAll.FirstOrDefault(Function(x) String.Compare(x.Name, colSecondary, True) = 0) Is Nothing Then
-                Throw New Exception(String.Format("La colonna {0} non appartiene alla classe {1}!", colSecondary, pJoin.name))
+                Throw New Exception(String.Format("La colonna {0} non appartiene alla classe {1}!", colSecondary, pJoin.tableName))
             End If
 
             ' ... genera lista campi select
             If sel.Length = 0 Then
                 If colsPrincipal Is Nothing Then
-                    sel = propGet.name + ".*"
+                    sel = propGet.tableName + ".*"
                 Else
                     For Each c As String In colsPrincipal
                         sel += If(sel.Length = 0, "", ",")
-                        sel += String.Format("{0}.{1}", propGet.name, c)
+                        sel += String.Format("{0}.{1}", propGet.tableName, c)
                     Next
                 End If
             End If
             If colsSecondary Is Nothing Then
                 sel += If(sel.Length = 0, "", ",")
-                sel += pJoin.name + ".*"
+                sel += pJoin.tableName + ".*"
             Else
                 For Each c As String In colsSecondary
                     sel += If(sel.Length = 0, "", ",")
-                    sel += String.Format("{0}.{1}", pJoin.name, c)
+                    sel += String.Format("{0}.{1}", pJoin.tableName, c)
                 Next
             End If
 
             ' ... genera il join
-            If join.Length = 0 Then join = propGet.name
-            join += String.Format(" {1} JOIN {2} ON {0}.{3} = {2}.{4}", propGet.name, tipojOIN, pJoin.name, colPrincipal, colSecondary)
+            If join.Length = 0 Then join = propGet.tableName
+            join += String.Format(" {1} JOIN {2} ON {0}.{3} = {2}.{4}", propGet.tableName, tipojOIN, pJoin.tableName, colPrincipal, colSecondary)
             join = "(" + join + ")"
 
         End Sub
