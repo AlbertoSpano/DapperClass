@@ -51,13 +51,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Dapper, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Dapper.2.0.4\lib\netstandard2.0\Dapper.dll</HintPath>
+      <HintPath>..\packages\Dapper.2.0.30\lib\net461\Dapper.dll</HintPath>
+    </Reference>
+    <Reference Include="Dapper.FluentMap, Version=1.8.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>C:\Users\Alberto\source\repos\SitoCommissario\packages\Dapper.FluentMap.1.8.0\lib\net451\Dapper.FluentMap.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>C:\Users\Alberto\source\repos\SitoCommissario\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>C:\Users\Alberto\source\repos\SitoCommissario\packages\System.ComponentModel.Annotations.4.7.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
@@ -86,12 +93,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database.Infrastrutture\Attributi.vb" />
+    <Compile Include="Database.Infrastrutture\Estensioni.vb" />
     <Compile Include="Database.Infrastrutture\GeneraSql.vb" />
     <Compile Include="Database.Infrastrutture\IPaging.vb" />
     <Compile Include="Database.Infrastrutture\IRecord.vb" />
     <Compile Include="Database.Infrastrutture\IRepository.vb" />
-    <Compile Include="Database.Infrastrutture\Metodi.vb" />
+    <Compile Include="Database.Infrastrutture\JoinSql.vb" />
     <Compile Include="Database.Infrastrutture\PropertyGet.vb" />
+    <Compile Include="Database.Infrastrutture\ReflectionHelper.vb" />
+    <Compile Include="Database.Infrastrutture\SelectSQL.vb" />
+    <Compile Include="Database.Infrastrutture\SortSQL.vb" />
+    <Compile Include="Database.Infrastrutture\WhereSQL.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>

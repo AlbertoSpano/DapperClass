@@ -8,13 +8,13 @@ Namespace Database.Infrastrutture
         Public cn As IDbConnection
         Public gen As GeneraSql(Of T)
 
-        Public Sub New(conn As IDbConnection, Optional tableName As String = Nothing, Optional sqlBase As String = Nothing)
+        Public Sub New(conn As IDbConnection, Optional tableName As String = Nothing)
 
             cn = conn
 
             tabella = If(tableName, GetType(T).Name)
 
-            gen = New GeneraSql(Of T)(tableName, sqlBase)
+            gen = New GeneraSql(Of T)(tableName)
 
         End Sub
 

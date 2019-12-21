@@ -1,6 +1,6 @@
-﻿Imports System.Reflection
+﻿Imports System.Linq.Expressions
+Imports System.Reflection
 Imports Dapper
-Imports Database.Infrastrutture.Attributi
 
 Namespace Database.Infrastrutture
 
@@ -20,7 +20,6 @@ Namespace Database.Infrastrutture
     Public Class GeneraSql(Of T As Class)
 
         Public ReadOnly Property tabella() As String
-        Private _sqlBase As String
         Private propGet As PropertyGet(Of T)
 
         Public ReadOnly Property props As List(Of PropertyInfo)
@@ -35,7 +34,7 @@ Namespace Database.Infrastrutture
             End Get
         End Property
 
-        Public Sub New(Optional tableName As String = Nothing, Optional sqlBase As String = Nothing)
+        Public Sub New(Optional tableName As String = Nothing)
 
             ' ... classe con proprietà della classe T
             propGet = New PropertyGet(Of T)
@@ -43,10 +42,7 @@ Namespace Database.Infrastrutture
             If tableName Is Nothing Then tableName = propGet.tableName
             _tabella = tableName
 
-            If sqlBase Is Nothing Then sqlBase = String.Format("SELECT * FROM {0};", tabella)
-            _sqlBase = sqlBase
-
-            _sqlBase = _sqlBase.TrimEnd(";")
+            join = Nothing
 
         End Sub
 
@@ -89,7 +85,7 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function sqlFindById() As String
-            Return String.Format("{0} WHERE {1}=@{1};", _sqlBase, propId.Name)
+            Return String.Format("{0} WHERE {1}=@{1};", sqlGetAll.TrimEnd(";"), propId.Name)
         End Function
 
         Public Function sqlAdd() As String
@@ -125,7 +121,7 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function sqlGetAll() As String
-            Return String.Format("{0};", _sqlBase)
+            Return String.Format("SELECT * FROM {0};", tabella)
         End Function
 
 
@@ -141,7 +137,7 @@ Namespace Database.Infrastrutture
         ''' </summary>
         ''' 
         Private sel As String = String.Empty
-        Private join As String = String.Empty
+        Private join As String = Nothing
         Private wh As String = String.Empty
         Private params As New DynamicParameters
         Private sh As String = String.Empty
@@ -170,6 +166,73 @@ Namespace Database.Infrastrutture
 
         End Function
 
+#Region " SELECT "
+
+        Public Function [Select]() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of T)
+
+            sel += If(String.IsNullOrEmpty(sel), "", ",") + s.GetSql
+
+            Return Me
+
+        End Function
+
+        Public Function [Select](Of TT As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT)
+
+            sel += If(String.IsNullOrEmpty(sel), "", ",") + s.GetSql
+
+            Return Me
+
+        End Function
+
+        Public Function [Select](Of TT1 As Class, TT2 As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT1, TT2)
+
+            sel += If(String.IsNullOrEmpty(sel), "", ",") + s.GetSql
+
+            Return Me
+
+        End Function
+
+        Public Function [Select](Of TT1 As Class, TT2 As Class, TT3 As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT1, TT2, TT3)
+
+            sel += If(String.IsNullOrEmpty(sel), "", ",") + s.GetSql
+
+            Return Me
+
+        End Function
+
+        Public Function [Select](Of TT1 As Class, TT2 As Class, TT3 As Class, TT4 As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT1, TT2, TT3, TT4)
+
+            sel += If(String.IsNullOrEmpty(sel), "", ",") + s.GetSql
+
+            Return Me
+
+        End Function
+
+
+        Public Function [Select](Of TT1 As Class, TT2 As Class, TT3 As Class, TT4 As Class, TT5 As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT1, TT2, TT3, TT4, TT5)
+
+            sel += If(String.IsNullOrEmpty(sel), "", ",") + s.GetSql
+
+            Return Me
+
+        End Function
+
+#End Region
+
+#Region " JOIN "
+
         Public Function JoinNested(tipoJoin As TipiJoin, sqlNested As String, [Alias] As String, colPrincipal_ON As String, colSecondary_ON As String) As GeneraSql(Of T)
 
             If nj.Length > 0 Then Throw New Exception("Nested Join già impostato!")
@@ -180,6 +243,38 @@ Namespace Database.Infrastrutture
             nj = nj.TrimEnd(")")
 
             nj = String.Format("{0} JOIN ({1}) AS {2} ON {3}.{4}={2}.{5}", tipoJoin, nj, [Alias], propGet.tableName, colPrincipal_ON, colSecondary_ON)
+
+            Return Me
+
+        End Function
+
+        Private Function JoinBase(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)),
+                                                                fkCol As Expression(Of Func(Of TFK, String)),
+                                                                tipoJoin As TipiJoin) As GeneraSql(Of T)
+
+            Dim j As New JoinSQL(Of TPK, TFK)(pkCol, fkCol)
+
+            join = j.GetSQL(tipoJoin, join)
+
+            Return Me
+
+        End Function
+
+        Public Function Inner(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
+
+            Return JoinBase(Of TPK, TFK)(pkCol, fkCol, TipiJoin.INNER)
+
+        End Function
+
+        Public Function Right(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
+
+            Return JoinBase(Of TPK, TFK)(pkCol, fkCol, TipiJoin.RIGHT)
+
+        End Function
+
+        Public Function Left(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
+
+            Return JoinBase(Of TPK, TFK)(pkCol, fkCol, TipiJoin.LEFT)
 
             Return Me
 
@@ -224,6 +319,117 @@ Namespace Database.Infrastrutture
 
         End Function
 
+#End Region
+
+#Region " WHERE "
+
+        Public Function Where(w1 As Expression(Of Func(Of T, Boolean))) As GeneraSql(Of T)
+
+            'Dim w As New WhereSQL(Of T)(w1)
+
+            'wh += w.Clause
+
+            'If Not String.IsNullOrEmpty(w.ParamName) Then params.Add(w.ParamName, w.ParamValue)
+
+            'Return Me
+
+            Return WhereBase(Of T)(w1)
+
+        End Function
+
+        Public Function WhereAND(w1 As Expression(Of Func(Of T, Boolean))) As GeneraSql(Of T)
+
+            'Dim w As New WhereSQL(Of T)(w1)
+
+            'wh = String.Format("({0} AND {1})", wh, w.Clause)
+
+            'If Not String.IsNullOrEmpty(w.ParamName) Then params.Add(w.ParamName, w.ParamValue)
+
+            'Return Me
+
+            Return WhereBase(Of T)(w1, TipiWhere.AND)
+
+        End Function
+
+        Public Function WhereOR(w1 As Expression(Of Func(Of T, Boolean))) As GeneraSql(Of T)
+
+            'Dim w As New WhereSQL(Of T)(w1)
+
+            'wh = String.Format("({0} OR {1})", wh, w.Clause)
+
+            'If Not String.IsNullOrEmpty(w.ParamName) Then params.Add(w.ParamName, w.ParamValue)
+
+            'Return Me
+
+            Return WhereBase(Of T)(w1, TipiWhere.OR)
+
+        End Function
+
+        Public Function Where(Of T1 As Class)(w1 As Expression(Of Func(Of T1, Boolean))) As GeneraSql(Of T)
+
+            'Dim w As New WhereSQL(Of T1)(w1)
+
+            'wh += w.Clause
+
+            'If Not String.IsNullOrEmpty(w.ParamName) Then params.Add(w.ParamName, w.ParamValue)
+
+            'Return Me
+
+            Return WhereBase(Of T1)(w1)
+
+        End Function
+
+        Private Function WhereBase(Of T1 As Class)(w1 As Expression(Of Func(Of T1, Boolean)), Optional tipo As TipiWhere = Nothing) As GeneraSql(Of T)
+
+            Dim w As New WhereSQL(Of T1)(w1)
+
+            Select Case tipo
+
+                Case TipiWhere.NOTHING
+                    wh = w.Clause
+
+                Case TipiWhere.AND, TipiWhere.OR
+                    If String.IsNullOrEmpty(wh) Then
+                        Throw New Exception("Manca operatore AND o OR!")
+                    Else
+                        wh = String.Format("({0} {1} {2})", wh, tipo, w.Clause)
+                    End If
+
+                Case TipiWhere.NOT
+                    wh = String.Format("({0} {1} {2})", wh, tipo, w.Clause)
+
+            End Select
+
+            If Not String.IsNullOrEmpty(w.ParamName) Then params.Add(w.ParamName, w.ParamValue)
+
+            Return Me
+
+        End Function
+
+#End Region
+
+#Region " SORT "
+
+        Public Function SortBy(Of TS As Class)(sortExp As Expression(Of Func(Of TS, String)), Optional ordine As String = "") As GeneraSql(Of T)
+
+            Dim s As New SortSQL(Of TS)(sortExp, ordine)
+
+            sh += If(String.IsNullOrEmpty(sh), "", ",") + s.GetSQL()
+
+            Return Me
+
+        End Function
+
+        Public Function SortBy(sortClause As String) As GeneraSql(Of T)
+
+            sh += If(String.IsNullOrEmpty(sh), "", ",") + String.Format("{0}", sortClause)
+
+            Return Me
+
+        End Function
+
+#End Region
+
         Public Function WhereWithParameters(tipoWhere As TipiWhere, whereList As List(Of WhereInfo)) As GeneraSql(Of T)
 
             If tipoWhere = TipiWhere.NOTHING Then
@@ -246,6 +452,15 @@ Namespace Database.Infrastrutture
 
         End Function
 
+        Public Function Where(clause As String) As GeneraSql(Of T)
+
+            ' ... condizione where
+            wh = clause
+
+            Return Me
+
+        End Function
+
         Public Function Where(tipoWhere As TipiWhere, campo As String, valore As Object) As GeneraSql(Of T)
 
             If tipoWhere = TipiWhere.NOTHING Then
@@ -260,7 +475,7 @@ Namespace Database.Infrastrutture
             End If
 
             If Not campo.Contains(".") Then
-                campo = String.Format("{0}.{1}", tabella, campo)
+                campo = String.Format("[{0}].{1}", tabella, campo)
             End If
 
             ' ... condizione where
@@ -292,8 +507,8 @@ Namespace Database.Infrastrutture
         End Function
 
         Public Function GetSql() As String
-            If sel.Length = 0 Then sel = propGet.tableName + ".*"
-            If join.Length = 0 Then join = propGet.tableName
+            If String.IsNullOrEmpty(sel) Then sel = String.Format("[{0}].*", propGet.tableName)
+            If String.IsNullOrEmpty(join) Then join = propGet.tableName
             If wh.Length > 0 Then wh = If(wh.Contains("WHERE"), wh, " WHERE " + wh)
             If sh.Length > 0 Then sh = If(sh.Contains("ORDER BY"), sh, " ORDER BY " + sh)
             If gb.Length > 0 Then gb = If(gb.Contains("GROUP BY"), gb, " GROUP BY " + gb)
@@ -328,27 +543,27 @@ Namespace Database.Infrastrutture
             ' ... genera lista campi select
             If sel.Length = 0 Then
                 If colsPrincipal Is Nothing Then
-                    sel = propGet.tableName + ".*"
+                    sel = String.Format("[{0}].*", propGet.tableName)
                 Else
-                    For Each c As String In colsPrincipal
+                    For Each c As String In propGet.propsAll.Select(Function(x) x.Name) '.Where(Function(x) String.Compare(x.Name, colPrincipal, True) <> 0).Select(Function(x) x.Name)
                         sel += If(sel.Length = 0, "", ",")
-                        sel += String.Format("{0}.{1}", propGet.tableName, c)
+                        sel += String.Format("[{0}].{1}", propGet.tableName, c)
                     Next
                 End If
             End If
             If colsSecondary Is Nothing Then
                 sel += If(sel.Length = 0, "", ",")
-                sel += pJoin.tableName + ".*"
+                sel += String.Format("[{0}].*", pJoin.tableName)
             Else
-                For Each c As String In colsSecondary
+                For Each c As String In pJoin.propsAll.Select(Function(x) x.Name) '.Where(Function(x) String.Compare(x.Name, colSecondary, True) <> 0).Select(Function(x) x.Name)
                     sel += If(sel.Length = 0, "", ",")
-                    sel += String.Format("{0}.{1}", pJoin.tableName, c)
+                    sel += String.Format("[{0}].{1}", pJoin.tableName, c)
                 Next
             End If
 
             ' ... genera il join
-            If join.Length = 0 Then join = propGet.tableName
-            join += String.Format(" {1} JOIN {2} ON {0}.{3} = {2}.{4}", propGet.tableName, tipojOIN, pJoin.tableName, colPrincipal, colSecondary)
+            If String.IsNullOrEmpty(join) Then join = propGet.tableName
+            join += String.Format(" {1} JOIN [{2}] ON [{0}].{3} = [{2}].{4}", propGet.tableName, tipojOIN, pJoin.tableName, colPrincipal, colSecondary)
             join = "(" + join + ")"
 
         End Sub
@@ -369,6 +584,12 @@ Namespace Database.Infrastrutture
         Public campo As String
         Public valore As Object
         Public [like] As Boolean
+    End Class
+
+    Public Class TableColumn
+        Public Property tableName As String
+        Public Property column As String
+        Public Property isPrimary As Boolean
     End Class
 
 End Namespace
