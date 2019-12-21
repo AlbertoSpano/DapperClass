@@ -8,13 +8,13 @@ Namespace Database.Infrastrutture
         Public cn As IDbConnection
         Public gen As GeneraSql(Of T)
 
-        Public Sub New(conn As IDbConnection, Optional tableName As String = Nothing)
+        Public Sub New(conn As IDbConnection)
 
             cn = conn
 
-            tabella = If(tableName, GetType(T).Name)
+            gen = New GeneraSql(Of T)
 
-            gen = New GeneraSql(Of T)(tableName)
+            tabella = gen.tabella
 
         End Sub
 
@@ -33,6 +33,7 @@ Namespace Database.Infrastrutture
         Private Function argsDelete(Id As Integer) As DynamicParameters
             Return gen.argsDelete(Id)
         End Function
+
         Private Function sqlFindById() As String
             Return gen.sqlFindById
         End Function
@@ -91,14 +92,6 @@ Namespace Database.Infrastrutture
         Public MustOverride ReadOnly Property DisplayCols As Dictionary(Of String, String) Implements IRecord.DisplayCols
 
         Public MustOverride ReadOnly Property DESC_PROP As String Implements IRecord.DESC_PROP
-
-        Public Overridable Function View(sort As List(Of SortInfo), where As List(Of WhereInfo), Optional pagina As Integer = 0, Optional pageSize As Integer = 0) As List(Of T)
-            Throw New NotImplementedException()
-        End Function
-
-        Public Overridable Function View(sql As String, Optional pagina As Integer = 0, Optional pageSize As Integer = 0) As List(Of T)
-            Throw New NotImplementedException()
-        End Function
 
         Public Overridable Function GetForSelect(Optional keyField As String = Nothing, Optional valueField As String = Nothing, Optional allText As String = Nothing) As Dictionary(Of Integer, String) Implements IRepository(Of T).GetForSelect
             allText = If(allText, "...")

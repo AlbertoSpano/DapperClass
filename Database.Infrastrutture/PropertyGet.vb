@@ -19,8 +19,7 @@ Namespace Database.Infrastrutture
             Dim tipo As Type = GetType(T)
 
             ' ... tabella
-            Dim tbAttribute As TableNameAttribute = CType(Attribute.GetCustomAttribute(tipo, GetType(TableNameAttribute)), TableNameAttribute)
-            tableName = If(tbAttribute Is Nothing, tipo.Name, tbAttribute.Name)
+            tableName = TableNameModel(Of T).Get
 
             ' ... inizializza elenco propertyInfo esclusa la primaryKey
             propsWithoutId = New List(Of PropertyInfo)

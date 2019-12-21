@@ -102,7 +102,9 @@
     <Compile Include="Database.Infrastrutture\PropertyGet.vb" />
     <Compile Include="Database.Infrastrutture\ReflectionHelper.vb" />
     <Compile Include="Database.Infrastrutture\SelectSQL.vb" />
+    <Compile Include="Database.Infrastrutture\GroupBySQL.vb" />
     <Compile Include="Database.Infrastrutture\SortSQL.vb" />
+    <Compile Include="Database.Infrastrutture\TableNameModel.vb" />
     <Compile Include="Database.Infrastrutture\WhereSQL.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">

@@ -97,43 +97,6 @@ Namespace Database.Infrastrutture
 
         End Function
 
-        Private Function MemberInfoGet(memberExpression As MemberExpression) As MemberInfo
-
-            Dim baseProperty As PropertyInfo = Nothing
-            Dim [property] As PropertyInfo = Nothing
-            Dim member As MemberInfo = memberExpression.Member
-            Dim baseMember As MemberInfo = Nothing
-            Dim paramType As Type
-
-            While memberExpression IsNot Nothing
-
-                paramType = memberExpression.Type
-                baseMember = paramType.GetMembers().FirstOrDefault(Function(m) m.Name = member.Name)
-
-                If baseMember IsNot Nothing Then
-
-                    baseProperty = TryCast(baseMember, PropertyInfo)
-                    [property] = TryCast(member, PropertyInfo)
-                    If baseProperty IsNot Nothing AndAlso [property] IsNot Nothing Then
-
-                        If baseProperty.DeclaringType = [property].DeclaringType AndAlso baseProperty.PropertyType <> Nullable.GetUnderlyingType([property].PropertyType) Then
-                            Return baseMember
-                        End If
-                    Else
-                        Return baseMember
-                    End If
-
-                End If
-
-                memberExpression = TryCast(memberExpression.Expression, MemberExpression)
-
-            End While
-
-            paramType = memberExpression.Type
-            Return paramType.GetMember(member.Name)(0)
-
-        End Function
-
         Private Function GetOperation(nodeType As ExpressionType) As String
 
             Select Case nodeType
