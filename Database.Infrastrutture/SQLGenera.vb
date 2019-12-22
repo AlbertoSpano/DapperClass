@@ -23,6 +23,8 @@ Namespace Database.Infrastrutture
 
         Public Sub New()
 
+            Clear()
+
             ' ... classe con proprietà della classe T
             propGet = New PropertyGet(Of T)
 
@@ -137,14 +139,29 @@ Namespace Database.Infrastrutture
         Private sh As String = String.Empty
         Private ph As String = String.Empty
         Private gb As String = String.Empty
+        Private gbFrom As String = String.Empty
 
-#Region " Group By "
+#Region " group by "
+
+        Public Function GroupBy(Col As Expression(Of Func(Of T, String))) As GeneraSql(Of T)
+
+            Dim gbSel As New GroupBySQL(Of T)(Col)
+
+            gb += If(String.IsNullOrEmpty(gb), "", ",") + gbSel.GetSQL
+
+            gbFrom += If(String.IsNullOrEmpty(gbFrom), "", ",") + String.Format("[{0}]", gbSel.tableName)
+
+            Return Me
+
+        End Function
 
         Public Function GroupBy(Of TG As Class)(Col As Expression(Of Func(Of TG, String))) As GeneraSql(Of T)
 
             Dim gbSel As New GroupBySQL(Of TG)(Col)
 
             gb += If(String.IsNullOrEmpty(gb), "", ",") + gbSel.GetSQL
+
+            gbFrom += If(String.IsNullOrEmpty(gbFrom), "", ",") + String.Format("[{0}]", gbSel.tableName)
 
             Return Me
 
@@ -231,19 +248,19 @@ Namespace Database.Infrastrutture
 
         End Function
 
-        Public Function Inner(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
+        Public Function InnerJoin(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
 
             Return JoinBase(Of TPK, TFK)(pkCol, fkCol, TipiJoin.INNER)
 
         End Function
 
-        Public Function Right(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
+        Public Function RightJoin(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
 
             Return JoinBase(Of TPK, TFK)(pkCol, fkCol, TipiJoin.RIGHT)
 
         End Function
 
-        Public Function Left(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
+        Public Function LeftJoin(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
 
             Return JoinBase(Of TPK, TFK)(pkCol, fkCol, TipiJoin.LEFT)
 
@@ -342,7 +359,17 @@ Namespace Database.Infrastrutture
 
 #Region " SORT "
 
-        Public Function SortBy(Of TS As Class)(sortExp As Expression(Of Func(Of TS, String)), Optional ordine As String = "") As GeneraSql(Of T)
+        Public Function OrderBy(sortExp As Expression(Of Func(Of T, String)), Optional ordine As String = "") As GeneraSql(Of T)
+
+            Dim s As New SortSQL(Of T)(sortExp, ordine)
+
+            sh += If(String.IsNullOrEmpty(sh), "", ",") + s.GetSQL()
+
+            Return Me
+
+        End Function
+
+        Public Function OrderBy(Of TS As Class)(sortExp As Expression(Of Func(Of TS, String)), Optional ordine As String = "") As GeneraSql(Of T)
 
             Dim s As New SortSQL(Of TS)(sortExp, ordine)
 
@@ -352,7 +379,7 @@ Namespace Database.Infrastrutture
 
         End Function
 
-        Public Function SortBy(sortClause As String) As GeneraSql(Of T)
+        Public Function OrderBy(sortClause As String) As GeneraSql(Of T)
 
             sh += If(String.IsNullOrEmpty(sh), "", ",") + String.Format("{0}", sortClause)
 
@@ -382,24 +409,41 @@ Namespace Database.Infrastrutture
             sh = String.Empty
             ph = String.Empty
             gb = String.Empty
+            gbFrom = String.Empty
         End Sub
+
+        Private Function GetSqlBase(sqlCount As Boolean) As String
+
+            If Not String.IsNullOrEmpty(gb) Then
+                sel = gb
+            Else
+                If sqlCount Then
+                    sel = "COUNT(*)"
+                    sh = String.Empty
+                Else
+                    If String.IsNullOrEmpty(sel) Then sel = String.Format("[{0}].*", propGet.tableName)
+                End If
+            End If
+
+            If String.IsNullOrEmpty(join) Then join = If(String.IsNullOrEmpty(gb), propGet.tableName, gbFrom)
+            If Not String.IsNullOrEmpty(gb) Then gb = If(gb.Contains("GROUP BY"), gb.Trim, "GROUP BY " + gb)
+            If Not String.IsNullOrEmpty(wh) Then wh = If(wh.Contains("WHERE"), wh, "WHERE " + wh)
+            If Not String.IsNullOrEmpty(sh) Then sh = If(sh.Contains("ORDER BY"), sh, "ORDER BY " + sh)
+
+            Dim ret As String = String.Format("SELECT {0} FROM {1} {2} {3} {4} {5}", sel.Trim, join.Trim, wh.Trim, gb.Trim, sh.Trim, ph.Trim)
+
+            Return ret.Trim + ";"
+
+        End Function
 
         Public Function GetSql() As String
 
-            If String.IsNullOrEmpty(sel) Then sel = String.Format("[{0}].*", propGet.tableName)
-            If String.IsNullOrEmpty(join) Then join = propGet.tableName
-            If Not String.IsNullOrEmpty(wh) Then wh = If(wh.Contains("WHERE"), wh, "WHERE " + wh.Trim)
-            If Not String.IsNullOrEmpty(sh) Then sh = If(sh.Contains("ORDER BY"), sh, "ORDER BY " + sh.Trim)
-            If Not String.IsNullOrEmpty(gb) Then gb = If(gb.Contains("GROUP BY"), gb.Trim, "GROUP BY " + gb.Trim)
+            Return GetSqlBase(False)
 
-            Return String.Format("SELECT {0} FROM {1} {2} {3} {4} {5};", sel, join, wh, gb, sh, ph)
         End Function
 
         Public Function GetSqlCount() As String
-            If join.Length = 0 Then join = propGet.tableName
-            If wh.Length > 0 Then wh = If(wh.Contains("WHERE"), wh, " WHERE " + wh)
-            If gb.Length > 0 Then gb = If(gb.Contains("GROUP BY"), gb, " GROUP BY " + gb)
-            Return String.Format("SELECT COUNT(*) FROM {0} {1} {2};", join, wh, gb)
+            Return GetSqlBase(True)
         End Function
 
         Public Function GetParams() As DynamicParameters
