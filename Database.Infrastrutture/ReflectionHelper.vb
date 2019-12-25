@@ -22,6 +22,12 @@ Namespace Database.Infrastrutture
                     Case ExpressionType.ConvertChecked
                         expr = (CType(expr, UnaryExpression)).Operand
 
+                    Case ExpressionType.Call
+                        Dim member As MethodCallExpression = CType(expr, MethodCallExpression)
+                        Dim methodName As String = member.Method.Name
+                        Dim campo As String = CType(member.Arguments(0), MemberExpression).Member.Name
+                        Return String.Format("{0}([{1}])", methodName, campo)
+
                     Case ExpressionType.MemberAccess
                         Return CType(expr, MemberExpression).Member.Name
 
