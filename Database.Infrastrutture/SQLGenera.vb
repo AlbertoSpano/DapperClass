@@ -141,17 +141,11 @@ Namespace Database.Infrastrutture
         Private gb As String = String.Empty
         Private gbFrom As String = String.Empty
 
-#Region " group by "
+#Region " GROUP BY "
 
         Public Function GroupBy(Col As Expression(Of Func(Of T, String))) As GeneraSql(Of T)
 
-            Dim gbSel As New GroupBySQL(Of T)(Col)
-
-            gb += If(String.IsNullOrEmpty(gb), "", ",") + gbSel.GetSQL
-
-            gbFrom += If(String.IsNullOrEmpty(gbFrom), "", ",") + String.Format("[{0}]", gbSel.tableName)
-
-            Return Me
+            Return GroupBy(Of T)(Col)
 
         End Function
 
@@ -167,17 +161,31 @@ Namespace Database.Infrastrutture
 
         End Function
 
+        Public Function RemoveGroupBy(Col As Expression(Of Func(Of T, String))) As GeneraSql(Of T)
+
+            Return RemoveGroupBy(Of T)(Col)
+
+        End Function
+
+        Public Function RemoveGroupBy(Of TG As Class)(Col As Expression(Of Func(Of TG, String))) As GeneraSql(Of T)
+
+            Dim gbSel As New GroupBySQL(Of TG)(Col)
+
+            gb = gb.Replace(gbSel.GetSQL, String.Empty).Trim.TrimEnd(",")
+
+            gbFrom = gbFrom.Replace(String.Format("[{0}]", gbSel.tableName), String.Empty).Trim.TrimEnd(",")
+
+            Return Me
+
+        End Function
+
 #End Region
 
 #Region " SELECT "
 
         Public Function [Select]() As GeneraSql(Of T)
 
-            Dim s As New SelectSQL(Of T)
-
-            sel += If(String.IsNullOrEmpty(sel), "", ",") + s.GetSql
-
-            Return Me
+            Return [Select](Of T)()
 
         End Function
 
@@ -221,12 +229,67 @@ Namespace Database.Infrastrutture
 
         End Function
 
-
         Public Function [Select](Of TT1 As Class, TT2 As Class, TT3 As Class, TT4 As Class, TT5 As Class)() As GeneraSql(Of T)
 
             Dim s As New SelectSQL(Of TT1, TT2, TT3, TT4, TT5)
 
             sel += If(String.IsNullOrEmpty(sel), "", ",") + s.GetSql
+
+            Return Me
+
+        End Function
+
+        Public Function RemoveSelect() As GeneraSql(Of T)
+
+            Return RemoveSelect(Of T)()
+
+        End Function
+
+        Public Function RemoveSelect(Of TT As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT)
+
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
+
+            Return Me
+
+        End Function
+
+        Public Function RemoveSelect(Of TT1 As Class, TT2 As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT1, TT2)
+
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
+
+            Return Me
+
+        End Function
+
+        Public Function RemoveSelect(Of TT1 As Class, TT2 As Class, TT3 As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT1, TT2, TT3)
+
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
+
+            Return Me
+
+        End Function
+
+        Public Function RemoveSelect(Of TT1 As Class, TT2 As Class, TT3 As Class, TT4 As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT1, TT2, TT3, TT4)
+
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
+
+            Return Me
+
+        End Function
+
+        Public Function RemoveSelect(Of TT1 As Class, TT2 As Class, TT3 As Class, TT4 As Class, TT5 As Class)() As GeneraSql(Of T)
+
+            Dim s As New SelectSQL(Of TT1, TT2, TT3, TT4, TT5)
+
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
 
             Return Me
 
@@ -243,6 +306,18 @@ Namespace Database.Infrastrutture
             Dim j As New JoinSQL(Of TPK, TFK)(pkCol, fkCol)
 
             join = j.GetSQL(tipoJoin, join)
+
+            Return Me
+
+        End Function
+
+        Private Function RemoveJoinBase(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)),
+                                                                 fkCol As Expression(Of Func(Of TFK, String)),
+                                                                 tipoJoin As TipiJoin) As GeneraSql(Of T)
+
+            Dim j As New JoinSQL(Of TPK, TFK)(pkCol, fkCol)
+
+            join = join.Replace(j.GetSQL(tipoJoin), String.Empty).Trim
 
             Return Me
 
@@ -268,19 +343,31 @@ Namespace Database.Infrastrutture
 
         End Function
 
+        Public Function RemoveInnerJoin(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
+
+            Return RemoveJoinBase(Of TPK, TFK)(pkCol, fkCol, TipiJoin.INNER)
+
+        End Function
+
+        Public Function RemoveRightJoin(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
+
+            Return RemoveJoinBase(Of TPK, TFK)(pkCol, fkCol, TipiJoin.RIGHT)
+
+        End Function
+
+        Public Function RemoveLeftJoin(Of TPK As Class, TFK As Class)(pkCol As Expression(Of Func(Of TPK, String)), fkCol As Expression(Of Func(Of TFK, String))) As GeneraSql(Of T)
+
+            Return RemoveJoinBase(Of TPK, TFK)(pkCol, fkCol, TipiJoin.LEFT)
+
+            Return Me
+
+        End Function
+
 #End Region
 
 #Region " WHERE "
 
         Public Function Where(w1 As Expression(Of Func(Of T, Boolean))) As GeneraSql(Of T)
-
-            'Dim w As New WhereSQL(Of T)(w1)
-
-            'wh += w.Clause
-
-            'If Not String.IsNullOrEmpty(w.ParamName) Then params.Add(w.ParamName, w.ParamValue)
-
-            'Return Me
 
             Return WhereBase(Of T)(w1)
 
@@ -288,27 +375,11 @@ Namespace Database.Infrastrutture
 
         Public Function WhereAND(w1 As Expression(Of Func(Of T, Boolean))) As GeneraSql(Of T)
 
-            'Dim w As New WhereSQL(Of T)(w1)
-
-            'wh = String.Format("({0} AND {1})", wh, w.Clause)
-
-            'If Not String.IsNullOrEmpty(w.ParamName) Then params.Add(w.ParamName, w.ParamValue)
-
-            'Return Me
-
             Return WhereBase(Of T)(w1, TipiWhere.AND)
 
         End Function
 
         Public Function WhereOR(w1 As Expression(Of Func(Of T, Boolean))) As GeneraSql(Of T)
-
-            'Dim w As New WhereSQL(Of T)(w1)
-
-            'wh = String.Format("({0} OR {1})", wh, w.Clause)
-
-            'If Not String.IsNullOrEmpty(w.ParamName) Then params.Add(w.ParamName, w.ParamValue)
-
-            'Return Me
 
             Return WhereBase(Of T)(w1, TipiWhere.OR)
 
@@ -316,15 +387,19 @@ Namespace Database.Infrastrutture
 
         Public Function Where(Of T1 As Class)(w1 As Expression(Of Func(Of T1, Boolean))) As GeneraSql(Of T)
 
-            'Dim w As New WhereSQL(Of T1)(w1)
-
-            'wh += w.Clause
-
-            'If Not String.IsNullOrEmpty(w.ParamName) Then params.Add(w.ParamName, w.ParamValue)
-
-            'Return Me
-
             Return WhereBase(Of T1)(w1)
+
+        End Function
+
+        Public Function WhereAND(Of T1 As Class)(w1 As Expression(Of Func(Of T1, Boolean))) As GeneraSql(Of T)
+
+            Return WhereBase(Of T1)(w1, TipiWhere.AND)
+
+        End Function
+
+        Public Function WhereOR(Of T1 As Class)(w1 As Expression(Of Func(Of T1, Boolean))) As GeneraSql(Of T)
+
+            Return WhereBase(Of T1)(w1, TipiWhere.OR)
 
         End Function
 
@@ -359,17 +434,13 @@ Namespace Database.Infrastrutture
 
 #Region " SORT "
 
-        Public Function OrderBy(sortExp As Expression(Of Func(Of T, String)), Optional ordine As String = "") As GeneraSql(Of T)
+        Public Function OrderBy(sortExp As Expression(Of Func(Of T, String)), Optional ordine As TipiOrderBy = TipiOrderBy.Default) As GeneraSql(Of T)
 
-            Dim s As New SortSQL(Of T)(sortExp, ordine)
-
-            sh += If(String.IsNullOrEmpty(sh), "", ",") + s.GetSQL()
-
-            Return Me
+            Return OrderBy(Of T)(sortExp, ordine)
 
         End Function
 
-        Public Function OrderBy(Of TS As Class)(sortExp As Expression(Of Func(Of TS, String)), Optional ordine As String = "") As GeneraSql(Of T)
+        Public Function OrderBy(Of TS As Class)(sortExp As Expression(Of Func(Of TS, String)), Optional ordine As TipiOrderBy = TipiOrderBy.Default) As GeneraSql(Of T)
 
             Dim s As New SortSQL(Of TS)(sortExp, ordine)
 

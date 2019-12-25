@@ -25,6 +25,8 @@ Namespace Database.Infrastrutture
                 virgola = ","
             Else
                 For Each p As PropertyInfo In prop.propsAll
+                    ' ... exclude readonly fields
+                    If Not p.CanWrite Then Continue For
                     ' .. field name
                     Dim name As String = p.Name
                     If prop.fkList.FirstOrDefault(Function(x) String.Compare(x.FKColumnName, name, True) = 0) IsNot Nothing Then

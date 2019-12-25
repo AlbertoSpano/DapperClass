@@ -8,8 +8,6 @@ Namespace Database.Infrastrutture
         Public Function GetMemberName(ByVal lambda As LambdaExpression) As String
 
             Dim expr As Expression = lambda
-            Dim baseProperty As PropertyInfo = Nothing
-            Dim [property] As PropertyInfo = Nothing
 
             While True
 
