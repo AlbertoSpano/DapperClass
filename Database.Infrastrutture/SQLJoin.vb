@@ -21,8 +21,8 @@ Namespace Database.Infrastrutture
             _pkTableName = TableNameModel(Of TPK).Get
             _fkTableName = TableNameModel(Of TFK).Get
 
-            _fkColumnName = fkCol.GetName
-            _pkColumnName = pkCol.GetName
+            _fkColumnName = fkCol.GetParams.FieldName
+            _pkColumnName = pkCol.GetParams.FieldName
 
         End Sub
 

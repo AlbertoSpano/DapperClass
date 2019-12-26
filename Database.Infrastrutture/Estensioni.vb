@@ -7,7 +7,7 @@ Namespace Database.Infrastrutture
     Module Estensioni
 
         <Extension()>
-        Public Function GetName(Of T As Class)(ByVal exp As Expression(Of Func(Of T, String))) As String
+        Public Function GetParams(Of T As Class)(ByVal exp As Expression(Of Func(Of T, String))) As ExpressionParams
 
             Return ReflectionHelper.GetMemberName(exp)
 

@@ -7,7 +7,7 @@ Namespace Database.Infrastrutture
     Public Class GeneraSql(Of T As Class)
 
         Public ReadOnly Property tabella() As String
-        Private propGet As PropertyGet(Of T)
+        Public Property propGet As PropertyGet(Of T)
 
         Public ReadOnly Property props As List(Of PropertyInfo)
             Get
@@ -132,51 +132,60 @@ Namespace Database.Infrastrutture
         '''     - pageSize: il numero di righe da restituire
         ''' </summary>
         ''' 
-        Private params As New DynamicParameters
-        Private sel As String = String.Empty
-        Private join As String = Nothing
-        Private wh As String = String.Empty
-        Private sh As String = String.Empty
-        Private ph As String = String.Empty
-        Private gb As String = String.Empty
-        Private gbFrom As String = String.Empty
+        Public Property params As New DynamicParameters
+        Public Property sel As String = String.Empty
+        Public Property join As String = Nothing
+        Public Property wh As String = String.Empty
+        Public Property sh As String = String.Empty
+        Public Property ph As String = String.Empty
+        Public Property gb As String = String.Empty
+        Public Property gbFrom As String = String.Empty
+        Public Property gbSel As String = String.Empty
 
 #Region " GROUP BY "
 
-        Public Function GroupBy(Col As Expression(Of Func(Of T, String))) As GeneraSql(Of T)
+        Public Function GroupBy(Col As Expression(Of Func(Of T, String)), Optional AliasName As String = Nothing) As GeneraSql(Of T)
 
-            Return GroupBy(Of T)(Col)
+            Return GroupBy(Of T)(Col, AliasName)
 
         End Function
 
-        Public Function GroupBy(Of TG As Class)(Col As Expression(Of Func(Of TG, String))) As GeneraSql(Of T)
+        Public Function GroupBy(Of TG As Class)(Col As Expression(Of Func(Of TG, String)), Optional AliasName As String = Nothing) As GeneraSql(Of T)
 
-            Dim gbSel As New GroupBySQL(Of TG)(Col)
+            Dim gbSql As New GroupBySQL(Of TG)(Col)
 
-            gb += If(String.IsNullOrEmpty(gb), "", ",") + gbSel.GetSQL
+            gb += If(String.IsNullOrEmpty(gb), "", ",") + gbSql.GetSQL()
 
-            gbFrom += If(String.IsNullOrEmpty(gbFrom), "", ",") + String.Format("[{0}]", gbSel.tableName)
+            gbSel += If(String.IsNullOrEmpty(gbSel), "", ",") + String.Format("{0}", gbSql.GetSQL(AliasName))
+
+            gbFrom += If(String.IsNullOrEmpty(gbFrom), "", ",") + String.Format("{0}", gbSql.tableName)
 
             Return Me
 
         End Function
 
-        Public Function RemoveGroupBy(Col As Expression(Of Func(Of T, String))) As GeneraSql(Of T)
+        Public Function RemoveGroupBy(Col As Expression(Of Func(Of T, String)), Optional AliasName As String = Nothing) As GeneraSql(Of T)
 
-            Return RemoveGroupBy(Of T)(Col)
+            Return RemoveGroupBy(Of T)(Col, AliasName)
 
         End Function
 
-        Public Function RemoveGroupBy(Of TG As Class)(Col As Expression(Of Func(Of TG, String))) As GeneraSql(Of T)
+        Public Function RemoveGroupBy(Of TG As Class)(Col As Expression(Of Func(Of TG, String)), Optional AliasName As String = Nothing) As GeneraSql(Of T)
 
             Dim gbSel As New GroupBySQL(Of TG)(Col)
 
-            gb = gb.Replace(gbSel.GetSQL, String.Empty).Trim.TrimEnd(",")
+            gb = gb.Replace(gbSel.GetSQL(), String.Empty).Trim.TrimStart(",")
 
-            gbFrom = gbFrom.Replace(String.Format("[{0}]", gbSel.tableName), String.Empty).Trim.TrimEnd(",")
+            gbFrom = gbFrom.Replace(gbSel.GetSQL(AliasName), String.Empty).Trim.TrimStart(",")
 
             Return Me
 
+        End Function
+
+        Public Function RemoveGroupByAll() As GeneraSql(Of T)
+            gb = String.Empty
+            gbFrom = String.Empty
+            Return Me
         End Function
 
 #End Region
@@ -249,7 +258,7 @@ Namespace Database.Infrastrutture
 
             Dim s As New SelectSQL(Of TT)
 
-            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimStart(",")
 
             Return Me
 
@@ -259,7 +268,7 @@ Namespace Database.Infrastrutture
 
             Dim s As New SelectSQL(Of TT1, TT2)
 
-            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimStart(",")
 
             Return Me
 
@@ -269,7 +278,7 @@ Namespace Database.Infrastrutture
 
             Dim s As New SelectSQL(Of TT1, TT2, TT3)
 
-            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimStart(",")
 
             Return Me
 
@@ -279,7 +288,7 @@ Namespace Database.Infrastrutture
 
             Dim s As New SelectSQL(Of TT1, TT2, TT3, TT4)
 
-            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimStart(",")
 
             Return Me
 
@@ -289,7 +298,7 @@ Namespace Database.Infrastrutture
 
             Dim s As New SelectSQL(Of TT1, TT2, TT3, TT4, TT5)
 
-            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimEnd(",")
+            sel = sel.Replace(s.GetSql, String.Empty).Trim.TrimStart(",")
 
             Return Me
 
@@ -432,7 +441,7 @@ Namespace Database.Infrastrutture
 
 #End Region
 
-#Region " SORT "
+#Region " ORDER BY "
 
         Public Function OrderBy(sortExp As Expression(Of Func(Of T, String)), Optional ordine As TipiOrderBy = TipiOrderBy.Default) As GeneraSql(Of T)
 
@@ -453,6 +462,38 @@ Namespace Database.Infrastrutture
         Public Function OrderBy(sortClause As String) As GeneraSql(Of T)
 
             sh += If(String.IsNullOrEmpty(sh), "", ",") + String.Format("{0}", sortClause)
+
+            Return Me
+
+        End Function
+
+        Public Function RemoveOrderBy(sortExp As Expression(Of Func(Of T, String)), Optional ordine As TipiOrderBy = TipiOrderBy.Default) As GeneraSql(Of T)
+
+            Return RemoveOrderBy(Of T)(sortExp, ordine)
+
+        End Function
+
+        Public Function RemoveOrderBy(Of TS As Class)(sortExp As Expression(Of Func(Of TS, String)), Optional ordine As TipiOrderBy = TipiOrderBy.Default) As GeneraSql(Of T)
+
+            Dim s As New SortSQL(Of TS)(sortExp, ordine)
+
+            sh = sh.Replace(s.GetSQL(), String.Empty).Trim.TrimStart(",")
+
+            Return Me
+
+        End Function
+
+        Public Function RemoveOrderBy(sortClause As String) As GeneraSql(Of T)
+
+            sh = sh.Replace(sortClause, String.Empty).Trim.TrimStart(",")
+
+            Return Me
+
+        End Function
+
+        Public Function RemoveOrderByAll() As GeneraSql(Of T)
+
+            sh = String.Empty
 
             Return Me
 
@@ -486,7 +527,7 @@ Namespace Database.Infrastrutture
         Private Function GetSqlBase(sqlCount As Boolean) As String
 
             If Not String.IsNullOrEmpty(gb) Then
-                sel = gb
+                sel = gbSel
             Else
                 If sqlCount Then
                     sel = "COUNT(*)"
@@ -519,6 +560,18 @@ Namespace Database.Infrastrutture
 
         Public Function GetParams() As DynamicParameters
             Return params
+        End Function
+
+        Public Function Clone() As GeneraSql(Of T)
+
+            Dim copia As GeneraSql(Of T) = Activator.CreateInstance(Me.GetType)
+
+            For Each p As PropertyInfo In Me.GetType.GetProperties
+                If p.CanWrite Then p.SetValue(copia, p.GetValue(Me))
+            Next
+
+            Return copia
+
         End Function
 
 #End Region

@@ -22,7 +22,7 @@ DapperClass
   ricerche di risorse eseguite utilizzando questa classe di risorse fortemente tipizzata.
 </summary>
 </member>
-<member name="F:Database.Infrastrutture.GeneraSql`1.params">
+<member name="P:Database.Infrastrutture.GeneraSql`1.params">
  <summary>
  Una volta istanziata la classe, è possibile creare i join (INNER, LEFT, RIGHT)
  tra la tabella dell'istanza e la tabella corrispondente alla classe TJoin

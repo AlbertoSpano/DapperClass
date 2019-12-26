@@ -5,9 +5,10 @@ Namespace Database.Infrastrutture
 
     Public Module ReflectionHelper
 
-        Public Function GetMemberName(ByVal lambda As LambdaExpression) As String
+        Public Function GetMemberName(ByVal lambda As LambdaExpression) As ExpressionParams
 
             Dim expr As Expression = lambda
+            Dim ret As New ExpressionParams
 
             While True
 
@@ -24,12 +25,13 @@ Namespace Database.Infrastrutture
 
                     Case ExpressionType.Call
                         Dim member As MethodCallExpression = CType(expr, MethodCallExpression)
-                        Dim methodName As String = member.Method.Name
-                        Dim campo As String = CType(member.Arguments(0), MemberExpression).Member.Name
-                        Return String.Format("{0}([{1}])", methodName, campo)
+                        ret.MethodName = member.Method.Name
+                        ret.FieldName = CType(member.Arguments(0), MemberExpression).Member.Name
+                        Return ret
 
                     Case ExpressionType.MemberAccess
-                        Return CType(expr, MemberExpression).Member.Name
+                        ret.FieldName = CType(expr, MemberExpression).Member.Name
+                        Return ret
 
                     Case Else
                         Return Nothing
@@ -39,15 +41,13 @@ Namespace Database.Infrastrutture
 
         End Function
 
-        Public Function GetBoolExpression(ByVal lambda As LambdaExpression) As Espressione
+        Public Function GetBoolExpression(ByVal lambda As LambdaExpression) As ExpressionParams
 
             Dim expr As Expression = lambda
             Dim cExpr As ConstantExpression = Nothing
             Dim bExpr As BinaryExpression = Nothing
-            Dim baseProperty As PropertyInfo = Nothing
-            Dim [property] As PropertyInfo = Nothing
 
-            Dim ret As New Espressione With {.FieldName = Nothing, .Operation = Nothing, .Value = Nothing}
+            Dim ret As New ExpressionParams With {.FieldName = Nothing, .Operation = Nothing, .Value = Nothing}
 
             While True
 
@@ -62,29 +62,35 @@ Namespace Database.Infrastrutture
                     Case ExpressionType.ConvertChecked
                         expr = (CType(expr, UnaryExpression)).Operand
 
+                    Case ExpressionType.Constant
+
+
+                    Case ExpressionType.Call
+                        Dim member As MethodCallExpression = CType(expr, MethodCallExpression)
+                        ret.MethodName = member.Method.Name
+                        ret.FieldName = CType(member.Arguments(0), MemberExpression).Member.Name
+                        Return ret
+
                     Case ExpressionType.Equal, ExpressionType.GreaterThan, ExpressionType.GreaterThanOrEqual, ExpressionType.LessThan, ExpressionType.LessThanOrEqual, ExpressionType.NotEqual, ExpressionType.And, ExpressionType.AndAlso, ExpressionType.Or, ExpressionType.OrElse
-                        ' .. operatore
+                        ' .. operator
                         ret.Operation = GetOperation(expr.NodeType)
-                        ' .. valore
+                        ' .. value
                         bExpr = CType(expr, BinaryExpression)
                         If TypeOf bExpr.Right Is ConstantExpression Then
                             cExpr = CType(bExpr.Right, ConstantExpression)
                             ret.Value = cExpr.Value
-                        ElseIf TypeOf bExpr.Right Is UnaryExpression Then
-                            expr = CType(bExpr.Right, UnaryExpression)
-                        Else
+                            'ElseIf TypeOf bExpr.Right Is UnaryExpression Then
+                            '    expr = CType(bExpr.Right, UnaryExpression)
+                        ElseIf TypeOf bExpr.Right Is MemberExpression Then
                             Dim s As MemberExpression = CType(bExpr.Right, System.Linq.Expressions.MemberExpression)
+                            ret.VariableName = s.Member.Name.Replace("$VB$Local_", "")
                             Dim objectMember = Expression.Convert(s, GetType(Object))
                             Dim getterLambda = Expression.Lambda(Of Func(Of Object))(objectMember)
                             Dim getter = getterLambda.Compile()
                             ret.Value = getter()
                         End If
                         ' .. field
-                        If TypeOf bExpr.Left Is UnaryExpression Then
-                            expr = CType(bExpr.Left, UnaryExpression)
-                        Else
-                            expr = CType(bExpr.Left, MemberExpression)
-                        End If
+                        expr = bExpr.Left
 
                     Case ExpressionType.MemberAccess
                         ret.FieldName = CType(expr, MemberExpression).Member.Name
@@ -131,7 +137,9 @@ Namespace Database.Infrastrutture
 
     End Module
 
-    Public Class Espressione
+    Public Class ExpressionParams
+        Public Property VariableName As String
+        Public Property MethodName As String
         Public Property FieldName As String
         Public Property Operation As String
         Public Property Value As Object

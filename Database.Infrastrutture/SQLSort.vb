@@ -11,21 +11,28 @@ Namespace Database.Infrastrutture
 
         Private _fieldName As String
         Private _tableName As String
-        Private _sortSql As String
+        Private _methodName As String
+        Private _ordine As String
 
         Public Sub New(sortExp As Expression(Of Func(Of T, String)), ordine As TipiOrderBy)
 
-            _fieldName = sortExp.GetName
+            Dim e As ExpressionParams = sortExp.GetParams
+            _fieldName = e.FieldName
+            _methodName = e.MethodName
 
             _tableName = TableNameModel(Of T).Get()
 
-            _sortSql = String.Format("[{0}].{1} {2}", _tableName, _fieldName, If(ordine = TipiOrderBy.Default, "", ordine))
+            _ordine = If(ordine = TipiOrderBy.Default, "", ordine)
 
         End Sub
 
         Public Function GetSQL() As String
 
-            Return _sortSql
+            If _methodName Is Nothing Then
+                Return String.Format("[{0}].{1} {2}", _tableName, _fieldName, _ordine)
+            Else
+                Return String.Format("{3}([{0}].{1}) {2}", _tableName, _fieldName, _ordine, _methodName)
+            End If
 
         End Function
 

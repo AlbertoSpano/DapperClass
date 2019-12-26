@@ -11,8 +11,10 @@ Namespace Database.Infrastrutture
 
     Public Class WhereSQL(Of T1 As Class)
 
+        Private variableName As String
         Private fieldName As String
         Private tableName As String
+        Private methodName As String
 
         Public ReadOnly Property ParamName As String
 
@@ -22,14 +24,21 @@ Namespace Database.Infrastrutture
 
         Public Sub New(exp1 As Expression(Of Func(Of T1, Boolean)))
 
-            Dim expr As Espressione = GetBoolExpression(exp1)
+            Dim expr As ExpressionParams = GetBoolExpression(exp1)
             fieldName = expr.FieldName
+            methodName = expr.MethodName
+            variableName = expr.VariableName
 
             tableName = TableNameModel(Of T1).Get
 
-            ParamName = String.Format("@{0}", fieldName)
+            ParamName = String.Format("@{0}", If(variableName, fieldName))
             ParamValue = expr.Value
-            Clause = String.Format("[{0}].{1} {2} {3}", tableName, fieldName, expr.Operation, ParamName)
+
+            If methodName Is Nothing Then
+                Clause = String.Format("[{0}].{1} {2} {3}", tableName, fieldName, expr.Operation, ParamName)
+            Else
+                Clause = String.Format("{4}([{0}].{1}) {2} {3}", tableName, fieldName, expr.Operation, ParamName, methodName)
+            End If
 
         End Sub
 
