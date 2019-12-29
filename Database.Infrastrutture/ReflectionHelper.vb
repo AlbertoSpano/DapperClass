@@ -63,7 +63,8 @@ Namespace Database.Infrastrutture
                         expr = (CType(expr, UnaryExpression)).Operand
 
                     Case ExpressionType.Constant
-
+                        cExpr = CType(bExpr.Right, ConstantExpression)
+                        ret.Value = cExpr.Value
 
                     Case ExpressionType.Call
                         Dim member As MethodCallExpression = CType(expr, MethodCallExpression)

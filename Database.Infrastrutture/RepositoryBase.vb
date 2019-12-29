@@ -6,15 +6,15 @@ Namespace Database.Infrastrutture
 
         Private tabella As String
         Public cn As IDbConnection
-        Public gen As GeneraSql(Of T)
+        Public gen As GeneraSqlCRUD(Of T)
 
         Public Sub New(conn As IDbConnection)
 
             cn = conn
 
-            gen = New GeneraSql(Of T)
+            gen = New GeneraSqlCRUD(Of T)
 
-            tabella = gen.tabella
+            tabella = gen.tableName
 
         End Sub
 

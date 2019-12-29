@@ -94,7 +94,8 @@
   <ItemGroup>
     <Compile Include="Database.Infrastrutture\Attributi.vb" />
     <Compile Include="Database.Infrastrutture\Estensioni.vb" />
-    <Compile Include="Database.Infrastrutture\SQLGenera.vb" />
+    <Compile Include="Database.Infrastrutture\SQLGeneraBase.vb" />
+    <Compile Include="Database.Infrastrutture\SQLGeneraCRUD.vb" />
     <Compile Include="Database.Infrastrutture\IPaging.vb" />
     <Compile Include="Database.Infrastrutture\IRecord.vb" />
     <Compile Include="Database.Infrastrutture\IRepository.vb" />

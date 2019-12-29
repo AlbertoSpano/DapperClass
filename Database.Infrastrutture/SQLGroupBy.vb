@@ -1,33 +1,40 @@
 ﻿Imports System.Linq.Expressions
-Imports Database.Infrastrutture
 
-Public Class GroupBySQL(Of T As Class)
+Namespace Database.Infrastrutture
 
-    Private _fieldName As String
-    Private _methodName As String
+    Public Class GroupBySQL(Of T As Class)
 
-    Public tableName As String
+        Private _fieldName As String
+        Private _methodName As String
 
-    Public Sub New(col As Expression(Of Func(Of T, String)))
+        Public tableName As String
 
-        Dim e As ExpressionParams = col.GetParams
-        _fieldName = e.FieldName
-        _methodName = e.MethodName
+        Public Sub New(col As Expression(Of Func(Of T, String)))
 
-        tableName = TableNameModel(Of T).Get()
+            Dim e As ExpressionParams = col.GetParams
+            _fieldName = e.FieldName
+            _methodName = e.MethodName
 
-    End Sub
+            tableName = TableNameModel(Of T).Get()
 
-    Public Function GetSQL(Optional AliasName As String = Nothing) As String
+        End Sub
 
-        AliasName = If(AliasName Is Nothing, String.Empty, String.Format("AS {0}", AliasName))
+        Public Function GetSQL(Optional AliasName As String = Nothing) As String
 
-        If _methodName Is Nothing Then
-            Return String.Format("[{0}].{1} {2}", tableName, _fieldName, AliasName).Trim
-        Else
-            Return String.Format("{2}([{0}].{1}) {3}", tableName, _fieldName, _methodName, AliasName).Trim
-        End If
+            AliasName = If(AliasName Is Nothing, String.Empty, String.Format("AS {0}", AliasName))
 
-    End Function
+            Dim ret As String
 
-End Class
+            If _methodName Is Nothing Then
+                ret = String.Format("[{0}].{1}", tableName, _fieldName).Trim
+            Else
+                ret = String.Format("{2}([{0}].{1})", tableName, _fieldName, _methodName).Trim
+            End If
+
+            Return String.Format("{0} {1}", ret, AliasName).Trim
+
+        End Function
+
+    End Class
+
+End Namespace
