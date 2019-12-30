@@ -2,7 +2,7 @@
 
 Namespace Database.Infrastrutture
 
-    Public Class WhereSQL(Of T1 As Class)
+    Public Class HavingSQL(Of T1 As Class)
 
         Private variableName As String
         Private fieldName As String
@@ -15,7 +15,9 @@ Namespace Database.Infrastrutture
 
         Public ReadOnly Property Clause As String
 
-        Public Sub New(exp1 As Expression(Of Func(Of T1, Boolean)))
+        Public Sub New(exp1 As Expression(Of Func(Of T1, Boolean)), AggregateFunction As AggregateFunction)
+
+            If AggregateFunction = AggregateFunction.NOTHING Then Throw New Exception("Aggregate function non specified for HAVING sql command!")
 
             Dim expr As ExpressionParams = GetBoolExpression(exp1)
             fieldName = expr.FieldName
@@ -28,9 +30,9 @@ Namespace Database.Infrastrutture
             ParamValue = expr.Value
 
             If methodName Is Nothing Then
-                Clause = String.Format("[{0}].{1} {2} {3}", tableName, fieldName, expr.Operation, ParamName)
+                Clause = String.Format("{4}([{0}].{1}) {2} {3}", tableName, fieldName, expr.Operation, ParamValue, AggregateFunction)
             Else
-                Clause = String.Format("{4}([{0}].{1}) {2} {3}", tableName, fieldName, expr.Operation, ParamName, methodName)
+                Clause = String.Format("{5}({4}([{0}].{1})) {2} {3}", tableName, fieldName, expr.Operation, ParamValue, methodName, AggregateFunction)
             End If
 
         End Sub

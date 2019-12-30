@@ -94,6 +94,7 @@
   <ItemGroup>
     <Compile Include="Database.Infrastrutture\Attributi.vb" />
     <Compile Include="Database.Infrastrutture\Estensioni.vb" />
+    <Compile Include="Database.Infrastrutture\SQLEnum.vb" />
     <Compile Include="Database.Infrastrutture\SQLGeneraBase.vb" />
     <Compile Include="Database.Infrastrutture\SQLGeneraCRUD.vb" />
     <Compile Include="Database.Infrastrutture\IPaging.vb" />
@@ -105,6 +106,7 @@
     <Compile Include="Database.Infrastrutture\SQLSelect.vb" />
     <Compile Include="Database.Infrastrutture\SQLGroupBy.vb" />
     <Compile Include="Database.Infrastrutture\SQLSort.vb" />
+    <Compile Include="Database.Infrastrutture\SQLHaving.vb" />
     <Compile Include="Database.Infrastrutture\TableNameModel.vb" />
     <Compile Include="Database.Infrastrutture\SQLWhere.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />

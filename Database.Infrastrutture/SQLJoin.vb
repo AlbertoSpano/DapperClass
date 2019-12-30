@@ -3,12 +3,6 @@ Imports Database.Infrastrutture
 
 Namespace Database.Infrastrutture
 
-    Public Enum TipiJoin
-        INNER
-        LEFT
-        RIGHT
-    End Enum
-
     Public Class JoinSQL(Of TPK As Class, TFK As Class)
 
         Private _pkTableName As String

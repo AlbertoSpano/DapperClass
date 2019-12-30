@@ -3,15 +3,6 @@ Imports System.Reflection
 
 Namespace Database.Infrastrutture
 
-    Public Enum AggregateFunction
-        [NOTHING]
-        AVG
-        COUNT
-        MAX
-        MIN
-        SUM
-    End Enum
-
     Public Class SelectSQL(Of T As Class)
 
         Private tableName As String

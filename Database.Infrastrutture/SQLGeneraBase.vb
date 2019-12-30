@@ -32,43 +32,12 @@ Namespace Database.Infrastrutture
         Public Property sel As String = String.Empty
         Public Property join As String = Nothing
         Public Property wh As String = String.Empty
+        Public Property hv As String = String.Empty
         Public Property sh As String = String.Empty
         Public Property ph As String = String.Empty
         Public Property gb As String = String.Empty
         Public Property gbFrom As String = String.Empty
         Public Property gbSel As String = String.Empty
-
-#Region " GROUP BY "
-
-        Public Function GroupBy(Col As Expression(Of Func(Of T, String)),
-                                Optional AliasName As String = Nothing) As GeneraSql(Of T)
-
-            Return GroupBy(Of T)(Col, AliasName)
-
-        End Function
-
-        Public Function GroupBy(Of TG As Class)(Col As Expression(Of Func(Of TG, String)),
-                                                Optional AliasName As String = Nothing) As GeneraSql(Of T)
-
-            Dim gbSql As New GroupBySQL(Of TG)(Col)
-
-            gb += If(String.IsNullOrEmpty(gb), "", ",") + gbSql.GetSQL()
-
-            gbSel += If(String.IsNullOrEmpty(gbSel), "", ",") + String.Format("{0}", gbSql.GetSQL(AliasName))
-
-            If gbFrom.IndexOf(gbSql.tableName) = -1 Then gbFrom += If(String.IsNullOrEmpty(gbFrom), "", ",") + String.Format("{0}", gbSql.tableName)
-
-            Return Me
-
-        End Function
-
-        Public Function RemoveGroupByAll() As GeneraSql(Of T)
-            gb = String.Empty
-            gbFrom = String.Empty
-            Return Me
-        End Function
-
-#End Region
 
 #Region " SELECT "
 
@@ -278,6 +247,113 @@ Namespace Database.Infrastrutture
 
 #End Region
 
+#Region " GROUP BY "
+
+        Public Function GroupBy(Col As Expression(Of Func(Of T, String)),
+                                Optional AliasName As String = Nothing) As GeneraSql(Of T)
+
+            Return GroupBy(Of T)(Col, AliasName)
+
+        End Function
+
+        Public Function GroupBy(Of TG As Class)(Col As Expression(Of Func(Of TG, String)),
+                                                Optional AliasName As String = Nothing) As GeneraSql(Of T)
+
+            Dim gbSql As New GroupBySQL(Of TG)(Col)
+
+            gb += If(String.IsNullOrEmpty(gb), "", ",") + gbSql.GetSQL()
+
+            gbSel += If(String.IsNullOrEmpty(gbSel), "", ",") + String.Format("{0}", gbSql.GetSQL(AliasName))
+
+            If gbFrom.IndexOf(gbSql.tableName) = -1 Then gbFrom += If(String.IsNullOrEmpty(gbFrom), "", ",") + String.Format("{0}", gbSql.tableName)
+
+            Return Me
+
+        End Function
+
+        Public Function RemoveGroupByAll() As GeneraSql(Of T)
+            gb = String.Empty
+            gbFrom = String.Empty
+            Return Me
+        End Function
+
+#End Region
+
+#Region " HAVING "
+
+        Public Function Having(w1 As Expression(Of Func(Of T, Boolean)), AggregateFunction As AggregateFunction) As GeneraSql(Of T)
+
+            Return HavingBase(Of T)(w1, AggregateFunction)
+
+        End Function
+
+        Public Function HavingAND(w1 As Expression(Of Func(Of T, Boolean)), AggregateFUnction As AggregateFunction) As GeneraSql(Of T)
+
+            Return HavingBase(Of T)(w1, AggregateFUnction, TipiWhere.AND)
+
+        End Function
+
+        Public Function HavingOR(w1 As Expression(Of Func(Of T, Boolean)), AggregateFUnction As AggregateFunction) As GeneraSql(Of T)
+
+            Return HavingBase(Of T)(w1, AggregateFUnction, TipiWhere.OR)
+
+        End Function
+
+        Public Function Having(Of T1 As Class)(w1 As Expression(Of Func(Of T1, Boolean)), AggregateFUnction As AggregateFunction) As GeneraSql(Of T)
+
+            Return HavingBase(Of T1)(w1, AggregateFUnction)
+
+        End Function
+
+        Public Function HavingAND(Of T1 As Class)(w1 As Expression(Of Func(Of T1, Boolean)), AggregateFUnction As AggregateFunction) As GeneraSql(Of T)
+
+            Return HavingBase(Of T1)(w1, AggregateFUnction, TipiWhere.AND)
+
+        End Function
+
+        Public Function HavingOR(Of T1 As Class)(w1 As Expression(Of Func(Of T1, Boolean)), AggregateFUnction As AggregateFunction) As GeneraSql(Of T)
+
+            Return HavingBase(Of T1)(w1, AggregateFUnction, TipiWhere.OR)
+
+        End Function
+
+        Public Function RemoveHavingAll() As GeneraSql(Of T)
+
+            hv = String.Empty
+
+            Return Me
+
+        End Function
+
+        Private Function HavingBase(Of T1 As Class)(w1 As Expression(Of Func(Of T1, Boolean)), AggregateFUnction As AggregateFunction, Optional tipo As TipiWhere = Nothing) As GeneraSql(Of T)
+
+            Dim h As New HavingSQL(Of T1)(w1, AggregateFUnction)
+
+            Select Case tipo
+
+                Case TipiWhere.NOTHING
+                    hv = h.Clause
+
+                Case TipiWhere.AND, TipiWhere.OR
+                    If String.IsNullOrEmpty(hv) Then
+                        Throw New Exception("Manca operatore AND o OR!")
+                    Else
+                        hv = String.Format("({0} {1} {2})", hv, tipo, h.Clause)
+                    End If
+
+                Case TipiWhere.NOT
+                    hv = String.Format("({0} {1} {2})", hv, tipo, h.Clause)
+
+            End Select
+
+            If Not String.IsNullOrEmpty(h.ParamName) Then params.Add(h.ParamName, h.ParamValue)
+
+            Return Me
+
+        End Function
+
+#End Region
+
 #Region " ORDER BY "
 
         Public Function OrderBy(sortExp As Expression(Of Func(Of T, String)), Optional ordine As TipiOrderBy = TipiOrderBy.Default) As GeneraSql(Of T)
@@ -331,6 +407,7 @@ Namespace Database.Infrastrutture
             sel = String.Empty
             join = String.Empty
             wh = String.Empty
+            hv = String.Empty
             sh = String.Empty
             ph = String.Empty
             gb = String.Empty
@@ -350,8 +427,9 @@ Namespace Database.Infrastrutture
             If Not String.IsNullOrEmpty(gb) Then gb = If(gb.Contains("GROUP BY"), gb.Trim, "GROUP BY " + gb)
             If Not String.IsNullOrEmpty(wh) Then wh = If(wh.Contains("WHERE"), wh, "WHERE " + wh)
             If Not String.IsNullOrEmpty(sh) Then sh = If(sh.Contains("ORDER BY"), sh, "ORDER BY " + sh)
+            If Not String.IsNullOrEmpty(hv) Then hv = If(hv.Contains("HAVING"), hv, "HAVING " + hv)
 
-            Dim ret As String = String.Format("SELECT {0} FROM {1} {2} {3} {4} {5}", sel.Trim, join.Trim, wh.Trim, gb.Trim, sh.Trim, ph.Trim)
+            Dim ret As String = String.Format("SELECT {0} FROM {1} {2} {3} {4} {5} {6}", sel.Trim, join.Trim, wh.Trim, gb.Trim, hv.Trim, sh.Trim, ph.Trim)
 
             Return ret.Trim + ";"
 

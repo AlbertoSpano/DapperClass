@@ -2,11 +2,6 @@
 
 Namespace Database.Infrastrutture
 
-    Public Enum TipiOrderBy
-        [Default]
-        DESC
-    End Enum
-
     Public Class SortSQL(Of T As Class)
 
         Private _fieldName As String
