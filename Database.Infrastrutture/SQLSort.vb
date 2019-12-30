@@ -17,7 +17,7 @@ Namespace Database.Infrastrutture
 
             _tableName = TableNameModel(Of T).Get()
 
-            _ordine = If(ordine = TipiOrderBy.Default, "", ordine)
+            _ordine = If(ordine = TipiOrderBy.Default, "", ordine.ToString)
 
         End Sub
 

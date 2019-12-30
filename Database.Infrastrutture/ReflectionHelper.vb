@@ -26,8 +26,12 @@ Namespace Database.Infrastrutture
                     Case ExpressionType.Call
                         Dim member As MethodCallExpression = CType(expr, MethodCallExpression)
                         ret.MethodName = member.Method.Name
-                        ret.FieldName = CType(member.Arguments(0), MemberExpression).Member.Name
-                        Return ret
+                        If TypeOf member.Arguments(0) Is MemberExpression Then
+                            ret.FieldName = CType(member.Arguments(0), MemberExpression).Member.Name
+                            Return ret
+                        ElseIf TypeOf member.Arguments(0) Is UnaryExpression Then
+                            expr = CType(member.Arguments(0), UnaryExpression)
+                        End If
 
                     Case ExpressionType.MemberAccess
                         ret.FieldName = CType(expr, MemberExpression).Member.Name
@@ -69,8 +73,12 @@ Namespace Database.Infrastrutture
                     Case ExpressionType.Call
                         Dim member As MethodCallExpression = CType(expr, MethodCallExpression)
                         ret.MethodName = member.Method.Name
-                        ret.FieldName = CType(member.Arguments(0), MemberExpression).Member.Name
-                        Return ret
+                        If TypeOf member.Arguments(0) Is MemberExpression Then
+                            ret.FieldName = CType(member.Arguments(0), MemberExpression).Member.Name
+                            Return ret
+                        ElseIf TypeOf member.Arguments(0) Is UnaryExpression Then
+                            expr = CType(member.Arguments(0), UnaryExpression)
+                        End If
 
                     Case ExpressionType.Equal, ExpressionType.GreaterThan, ExpressionType.GreaterThanOrEqual, ExpressionType.LessThan, ExpressionType.LessThanOrEqual, ExpressionType.NotEqual, ExpressionType.And, ExpressionType.AndAlso, ExpressionType.Or, ExpressionType.OrElse
                         ' .. operator
