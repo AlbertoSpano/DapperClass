@@ -5,13 +5,24 @@ Namespace Database.Infrastrutture
 
     Public Class PropertyGet(Of T As Class)
 
-        Public ReadOnly propsWithoutId As List(Of PropertyInfo)
-        Public ReadOnly propsAll As List(Of PropertyInfo)
+        Public ReadOnly propsAll As List(Of PropertyInfoEx)
         Public ReadOnly propId As PropertyInfo
         Public ReadOnly tableName As String
         Public ReadOnly mappedPk As String
+        Private ReadOnly _mustMappedList As List(Of String)
         Public Property fkList As List(Of FK)
-        Public Property mustMappedList As List(Of String)
+
+        Public ReadOnly Property mustMappedList As List(Of String)
+            Get
+                Return propsAll.Where(Function(x) x.IsMustMapped = True).Select(Function(x) x.PropertyInfo.Name).ToList
+            End Get
+        End Property
+
+        Public ReadOnly Property PropsWithoutId As List(Of PropertyInfoEx)
+            Get
+                Return propsAll.Where(Function(x) x.IsPrimaryKey = False).ToList
+            End Get
+        End Property
 
         Public Sub New()
 
@@ -21,17 +32,11 @@ Namespace Database.Infrastrutture
             ' ... tabella
             tableName = TableNameModel(Of T).Get
 
-            ' ... inizializza elenco propertyInfo esclusa la primaryKey
-            propsWithoutId = New List(Of PropertyInfo)
-
             ' ... inizializza elenco propertyInfo 
-            propsAll = New List(Of PropertyInfo)
+            propsAll = New List(Of PropertyInfoEx)
 
             ' ... inizializza foreign key
             fkList = New List(Of FK)
-
-            ' ... inizializza gli alias
-            mustMappedList = New List(Of String)
 
             ' ... propertyInfo dei campi
             For Each p As PropertyInfo In tipo.GetProperties.Where(Function(x) x.PropertyType.IsValueType Or x.PropertyType Is GetType(System.String))
@@ -39,9 +44,6 @@ Namespace Database.Infrastrutture
                 ' ... not mapped
                 Dim noMap As NotMapped = GetAttributeFrom(Of NotMapped)(tipo, p.Name)
                 If noMap IsNot Nothing Then Continue For
-
-                ' ..
-                propsAll.Add(p)
 
                 ' ... campo primario
                 Dim pk As PrimaryKey = GetAttributeFrom(Of PrimaryKey)(tipo, p.Name)
@@ -52,12 +54,20 @@ Namespace Database.Infrastrutture
                 ' ... fkk foreign key
                 Dim als As MustMappedAttribute = GetAttributeFrom(Of MustMappedAttribute)(tipo, p.Name)
 
+                ' ...
+                Dim pNew As New PropertyInfoEx With {
+                .PropertyInfo = p,
+                .IsPrimaryKey = pk IsNot Nothing,
+                .IsForegnKey = fkk IsNot Nothing,
+                .IsMustMapped = als IsNot Nothing
+                }
+
                 ' ..
-                If pk Is Nothing Then
-                    propsWithoutId.Add(p)
-                Else
+                propsAll.Add(pNew)
+
+                ' ..
+                If pk IsNot Nothing Then
                     propId = p
-                    mappedPk = If(String.IsNullOrEmpty(pk.FieldName), p.Name, pk.FieldName)
                 End If
 
                 ' ..
@@ -69,9 +79,6 @@ Namespace Database.Infrastrutture
                                .FKTableName = tableName
                                })
                 End If
-
-                ' .. alias
-                If als IsNot Nothing Then mustMappedList.Add(p.Name)
 
             Next
 

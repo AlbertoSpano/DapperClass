@@ -33,4 +33,3 @@ D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.vbproj.C
 D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.dll
 D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.xml
 D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.pdb
-D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.vbprojAssemblyReference.cache

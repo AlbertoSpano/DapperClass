@@ -9,9 +9,9 @@ Namespace Database.Infrastrutture
         Public Property propGet As PropertyGet(Of T)
         Public ReadOnly Property tableName() As String
 
-        Public ReadOnly Property props As List(Of PropertyInfo)
+        Public ReadOnly Property props As List(Of PropertyInfoEx)
             Get
-                Return propGet.propsWithoutId
+                Return propGet.PropsWithoutId
             End Get
         End Property
 
@@ -43,8 +43,8 @@ Namespace Database.Infrastrutture
         Public Function argsAdd(record As T) As DynamicParameters
 
             Dim args = New DynamicParameters
-            For Each p As PropertyInfo In props
-                args.Add("@" + p.Name, p.GetValue(record))
+            For Each p As PropertyInfoEx In props
+                args.Add("@" + p.Name, p.PropertyInfo.GetValue(record))
             Next
             Return args
 
@@ -53,8 +53,8 @@ Namespace Database.Infrastrutture
         Public Function argsUpdate(record As T) As DynamicParameters
 
             Dim args = New DynamicParameters
-            For Each p As PropertyInfo In props
-                args.Add("@" + p.Name, p.GetValue(record))
+            For Each p As PropertyInfoEx In props
+                args.Add("@" + p.Name, p.PropertyInfo.GetValue(record))
             Next
             ' ... id
             args.Add("@" + propId.Name, propId.GetValue(record))
@@ -82,7 +82,7 @@ Namespace Database.Infrastrutture
 
             Dim campi As String = String.Empty
             Dim params As String = String.Empty
-            For Each p As PropertyInfo In props
+            For Each p As PropertyInfoEx In props
                 If params.Length > 0 Then params += ","
                 params += "@" + p.Name
                 If campi.Length > 0 Then campi += ","
@@ -96,7 +96,7 @@ Namespace Database.Infrastrutture
         Public Function sqlUpdate() As String
 
             Dim params As String = String.Empty
-            For Each p As PropertyInfo In props
+            For Each p As PropertyInfoEx In props
                 If params.Length > 0 Then params += ","
                 params += String.Format("{0}=@{0}", p.Name)
             Next

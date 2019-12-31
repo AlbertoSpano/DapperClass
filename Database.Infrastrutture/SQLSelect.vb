@@ -39,7 +39,7 @@ Namespace Database.Infrastrutture
                 sel += String.Format("{1} [{0}].*", tableName, virgola)
                 virgola = ","
             Else
-                For Each p As PropertyInfo In prop.propsAll
+                For Each p As PropertyInfoEx In prop.propsAll
                     ' ... exclude readonly fields
                     If Not p.CanWrite Then Continue For
                     ' .. field name
@@ -47,7 +47,7 @@ Namespace Database.Infrastrutture
                     If prop.fkList.FirstOrDefault(Function(x) String.Compare(x.FKColumnName, name, True) = 0) IsNot Nothing Then
                         ' .. foreign key
                         name = String.Format("{1} AS {0}{1}", tableName, name)
-                    ElseIf prop.mustMappedList.FirstOrDefault(Function(x) String.Compare(x, p.Name, True) = 0) IsNot Nothing Then
+                    ElseIf prop.mustMappedList.FirstOrDefault(Function(x) String.Compare(x, Name, True) = 0) IsNot Nothing Then
                         ' .. rimapped field
                         name = String.Format("{1} AS {0}{1}", tableName, name)
                     End If

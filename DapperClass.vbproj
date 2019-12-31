@@ -94,6 +94,7 @@
   <ItemGroup>
     <Compile Include="Database.Infrastrutture\Attributi.vb" />
     <Compile Include="Database.Infrastrutture\Estensioni.vb" />
+    <Compile Include="Database.Infrastrutture\PropertyInfoEx.vb" />
     <Compile Include="Database.Infrastrutture\SQLEnum.vb" />
     <Compile Include="Database.Infrastrutture\SQLGeneraBase.vb" />
     <Compile Include="Database.Infrastrutture\SQLGeneraCRUD.vb" />
@@ -109,6 +110,7 @@
     <Compile Include="Database.Infrastrutture\SQLHaving.vb" />
     <Compile Include="Database.Infrastrutture\TableNameModel.vb" />
     <Compile Include="Database.Infrastrutture\SQLWhere.vb" />
+    <Compile Include="Database.Infrastrutture\MapBase.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
