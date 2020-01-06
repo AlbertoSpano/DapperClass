@@ -4,11 +4,6 @@ Namespace Database.Infrastrutture
 
     Public Class WhereSQL(Of T1 As Class)
 
-        Private variableName As String
-        Private fieldName As String
-        Private tableName As String
-        Private methodName As String
-
         Public ReadOnly Property ParamName As String
 
         Public ReadOnly Property ParamValue As Object
@@ -18,19 +13,19 @@ Namespace Database.Infrastrutture
         Public Sub New(exp1 As Expression(Of Func(Of T1, Boolean)))
 
             Dim expr As ExpressionParams = GetBoolExpression(exp1)
-            fieldName = expr.FieldName
-            methodName = expr.MethodName
-            variableName = expr.VariableName
+            Dim tableName As String = TableNameModel(Of T1).Get
 
-            tableName = TableNameModel(Of T1).Get
-
-            ParamName = String.Format("@{0}", If(variableName, fieldName))
-            ParamValue = expr.Value
-
-            If methodName Is Nothing Then
-                Clause = String.Format("[{0}].{1} {2} {3}", tableName, fieldName, expr.Operation, ParamName)
+            If expr.Value Is Nothing Then
+                expr.Operation = "Is Null"
             Else
-                Clause = String.Format("{4}([{0}].{1}) {2} {3}", tableName, fieldName, expr.Operation, ParamName, methodName)
+                ParamName = String.Format("@{0}", If(expr.VariableName, expr.FieldName))
+                ParamValue = expr.Value
+            End If
+
+            If expr.MethodName Is Nothing Then
+                Clause = String.Format("[{0}].{1} {2} {3}", tableName, expr.FieldName, expr.Operation, ParamName).Trim
+            Else
+                Clause = String.Format("{4}([{0}].{1}) {2} {3}", tableName, expr.FieldName, expr.Operation, ParamName, expr.MethodName).Trim
             End If
 
         End Sub

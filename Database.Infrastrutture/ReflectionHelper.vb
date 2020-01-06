@@ -73,11 +73,26 @@ Namespace Database.Infrastrutture
                     Case ExpressionType.Call
                         Dim member As MethodCallExpression = CType(expr, MethodCallExpression)
                         ret.MethodName = member.Method.Name
-                        If TypeOf member.Arguments(0) Is MemberExpression Then
+                        If ret.MethodName = "CompareString" Then
+                            ret.MethodName = Nothing
+                            ' ... nome campo
                             ret.FieldName = CType(member.Arguments(0), MemberExpression).Member.Name
+                            ' .. valore
+                            Dim s As MemberExpression = CType(member.Arguments(1), System.Linq.Expressions.MemberExpression)
+                            ret.VariableName = s.Member.Name.Replace("$VB$Local_", "")
+                            Dim objectMember = Expression.Convert(s, GetType(Object))
+                            Dim getterLambda = Expression.Lambda(Of Func(Of Object))(objectMember)
+                            Dim getter = getterLambda.Compile()
+                            ret.Value = getter()
+                            ' ...
                             Return ret
-                        ElseIf TypeOf member.Arguments(0) Is UnaryExpression Then
-                            expr = CType(member.Arguments(0), UnaryExpression)
+                        Else
+                            If TypeOf member.Arguments(0) Is MemberExpression Then
+                                ret.FieldName = CType(member.Arguments(0), MemberExpression).Member.Name
+                                Return ret
+                            ElseIf TypeOf member.Arguments(0) Is UnaryExpression Then
+                                expr = CType(member.Arguments(0), UnaryExpression)
+                            End If
                         End If
 
                     Case ExpressionType.Equal, ExpressionType.GreaterThan, ExpressionType.GreaterThanOrEqual, ExpressionType.LessThan, ExpressionType.LessThanOrEqual, ExpressionType.NotEqual, ExpressionType.And, ExpressionType.AndAlso, ExpressionType.Or, ExpressionType.OrElse

@@ -28,16 +28,16 @@ Namespace Database.Infrastrutture
         '''     - pageSize: il numero di righe da restituire
         ''' </summary>
         ''' 
-        Public Property params As New DynamicParameters
-        Public Property sel As String = String.Empty
-        Public Property join As String = Nothing
-        Public Property wh As String = String.Empty
-        Public Property hv As String = String.Empty
-        Public Property sh As String = String.Empty
-        Public Property ph As String = String.Empty
-        Public Property gb As String = String.Empty
-        Public Property gbFrom As String = String.Empty
-        Public Property gbSel As String = String.Empty
+        Private Property params As New DynamicParameters
+        Private Property sel As String = String.Empty
+        Private Property join As String = Nothing
+        Private Property wh As String = String.Empty
+        Private Property hv As String = String.Empty
+        Private Property sh As String = String.Empty
+        Private Property ph As String = String.Empty
+        Private Property gb As String = String.Empty
+        Private Property gbFrom As String = String.Empty
+        Private Property gbSel As String = String.Empty
 
 #Region " SELECT "
 
@@ -449,17 +449,17 @@ Namespace Database.Infrastrutture
             Return params
         End Function
 
-        Public Function Clone() As GeneraSql(Of T)
+        'Public Function Clone() As GeneraSql(Of T)
 
-            Dim copia As GeneraSql(Of T) = Activator.CreateInstance(Me.GetType)
+        '    Dim copia As GeneraSql(Of T) = Activator.CreateInstance(Me.GetType)
 
-            For Each p As PropertyInfo In Me.GetType.GetProperties
-                If p.CanWrite Then p.SetValue(copia, p.GetValue(Me))
-            Next
+        '    For Each p As PropertyInfo In Me.GetType.GetProperties
+        '        If p.CanWrite Then p.SetValue(copia, p.GetValue(Me))
+        '    Next
 
-            Return copia
+        '    Return copia
 
-        End Function
+        'End Function
 
 #End Region
 

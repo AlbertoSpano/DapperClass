@@ -128,7 +128,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Database.Infrastrutture\RepositoryBase.vb" />
-    <Compile Include="Database.Infrastrutture\UnitOfWork.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">
