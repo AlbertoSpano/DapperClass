@@ -28,8 +28,8 @@ D:\Programmi_in_elaborazione\Utilità\DapperClass\bin\Debug\Dapper.FluentMap.xml
 D:\Programmi_in_elaborazione\Utilità\DapperClass\bin\Debug\Newtonsoft.Json.xml
 D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\Resources.resources
 D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.vbproj.GenerateResource.cache
-D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.vbproj.CoreCompileInputs.cache
 D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.vbproj.CopyComplete
 D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.dll
 D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.xml
 D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.pdb
+D:\Programmi_in_elaborazione\Utilità\DapperClass\obj\Debug\DapperClass.vbprojAssemblyReference.cache

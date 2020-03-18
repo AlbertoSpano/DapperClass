@@ -11,7 +11,7 @@ Namespace Database.Infrastrutture
         Function Update(customer As T) As Boolean
         Function Delete(Id As Integer) As Boolean
 
-        Function GetForSelect(Optional keyField As String = Nothing, Optional valueField As String = Nothing, Optional allText As String = Nothing) As Dictionary(Of Integer, String)
+        Function GetForSelect(DESC_PROP As String, Optional keyField As String = Nothing, Optional valueField As String = Nothing, Optional allText As String = Nothing) As Dictionary(Of Integer, String)
 
     End Interface
 

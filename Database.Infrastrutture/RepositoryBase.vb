@@ -2,19 +2,20 @@
 
 Namespace Database.Infrastrutture
 
-    Public MustInherit Class RepositoryBase(Of T As Class) : Implements IRepository(Of T) : Implements IRecord : Implements IPaging
+    Public MustInherit Class RepositoryBase(Of T As Class) : Implements IRepository(Of T) : Implements IPaging
 
-        Private tabella As String
         Public cn As IDbConnection
         Public gen As GeneraSqlCRUD(Of T)
+
+        Public Sub New()
+            gen = New GeneraSqlCRUD(Of T)
+        End Sub
 
         Public Sub New(conn As IDbConnection)
 
             cn = conn
 
             gen = New GeneraSqlCRUD(Of T)
-
-            tabella = gen.tableName
 
         End Sub
 
@@ -64,6 +65,7 @@ Namespace Database.Infrastrutture
 
         Public Function Add(recordNew As T) As Integer Implements IRepository(Of T).Add
             Try
+                If cn.State = ConnectionState.Closed Then cn.Open()
                 If cn.Execute(sqlAdd, argsAdd(recordNew)) = 1 Then
                     Return cn.Query(Of Integer)("Select @@IDENTITY;").First
                 Else
@@ -89,15 +91,11 @@ Namespace Database.Infrastrutture
             Return cn.Execute(sqlDelete, argsDelete(Id)) = 1
         End Function
 
-        Public MustOverride ReadOnly Property DisplayCols As Dictionary(Of String, String) Implements IRecord.DisplayCols
-
-        Public MustOverride ReadOnly Property DESC_PROP As String Implements IRecord.DESC_PROP
-
-        Public Overridable Function GetForSelect(Optional keyField As String = Nothing, Optional valueField As String = Nothing, Optional allText As String = Nothing) As Dictionary(Of Integer, String) Implements IRepository(Of T).GetForSelect
+        Public Overridable Function GetForSelect(DESC_PROP As String, Optional keyField As String = Nothing, Optional valueField As String = Nothing, Optional allText As String = Nothing) As Dictionary(Of Integer, String) Implements IRepository(Of T).GetForSelect
             allText = If(allText, "...")
             keyField = If(keyField, gen.propId.Name)
             valueField = If(valueField, DESC_PROP)
-            Dim sql As String = String.Format("SELECT {0} AS [Key], {1} AS [Value] FROM {2} ORDER BY {1};", keyField, valueField, tabella)
+            Dim sql As String = String.Format("SELECT {0} AS [Key], {1} AS [Value] FROM {2} ORDER BY {1};", keyField, valueField, gen.tableName)
             Return cn.Query(Of KeyValuePair(Of Integer, String))(sql).ToDictionary(Function(row) row.Key, Function(row) row.Value)
         End Function
 
