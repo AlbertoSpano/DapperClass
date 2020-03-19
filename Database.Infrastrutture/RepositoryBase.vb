@@ -63,7 +63,7 @@ Namespace Database.Infrastrutture
             Return cn.Query(Of T)(sqlFindById, argsFindById(Id)).FirstOrDefault
         End Function
 
-        Public Function Add(recordNew As T) As Integer Implements IRepository(Of T).Add
+        Public Overridable Function Add(recordNew As T) As Integer Implements IRepository(Of T).Add
             Try
                 If cn.State = ConnectionState.Closed Then cn.Open()
                 If cn.Execute(sqlAdd, argsAdd(recordNew)) = 1 Then
@@ -78,7 +78,7 @@ Namespace Database.Infrastrutture
 
         End Function
 
-        Public Function Update(recordEdit As T) As Boolean Implements IRepository(Of T).Update
+        Public Overridable Function Update(recordEdit As T) As Boolean Implements IRepository(Of T).Update
             Try
                 Return cn.Execute(sqlUpdate, argsUpdate(recordEdit)) = 1
             Catch ex As Exception
@@ -87,7 +87,7 @@ Namespace Database.Infrastrutture
             End Try
         End Function
 
-        Public Function Delete(Id As Integer) As Boolean Implements IRepository(Of T).Delete
+        Public Overridable Function Delete(Id As Integer) As Boolean Implements IRepository(Of T).Delete
             Return cn.Execute(sqlDelete, argsDelete(Id)) = 1
         End Function
 
